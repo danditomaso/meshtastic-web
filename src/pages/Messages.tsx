@@ -37,6 +37,10 @@ export const MessagesPage = () => {
     ? Types.ChannelNumber.Primary
     : activeChat;
 
+
+  console.log("MessagesPage", messages);
+
+
   return (
     <>
       <Sidebar>
@@ -126,7 +130,6 @@ export const MessagesPage = () => {
               <div className="flex flex-col h-full">
                 <div className="flex-1 overflow-y-auto">
                   <ChannelChat
-                    key={currentChannel.index}
                     messages={messages.broadcast.get(currentChannel.index)}
                   />
                 </div>
@@ -137,7 +140,6 @@ export const MessagesPage = () => {
               <div className="flex flex-col h-full">
                 <div className="flex-1 overflow-y-auto">
                   <ChannelChat
-                    key={node.num}
                     messages={messages.direct.get(node.num)}
                   />
                 </div>

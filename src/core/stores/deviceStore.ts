@@ -3,12 +3,10 @@ import { MeshDevice, Protobuf, Types } from "@meshtastic/core";
 import { produce } from "immer";
 import { createContext, useContext } from "react";
 import { create as createStore } from "zustand";
+import { Message, MessageQueueItem, MessageType } from "@core/services/types.ts";
+import { randId } from "@core/utils/randId.ts";
 
 export type Page = "messages" | "map" | "config" | "channels" | "nodes";
-
-export interface MessageWithState extends Types.PacketMetadata<string> {
-  state: MessageState;
-}
 
 export type MessageState = "ack" | "waiting" | Protobuf.Mesh.Routing_Error;
 
@@ -45,8 +43,8 @@ export interface Device {
   nodes: Map<number, Protobuf.Mesh.NodeInfo>;
   metadata: Map<number, Protobuf.Mesh.DeviceMetadata>;
   messages: {
-    direct: Map<number, MessageWithState[]>;
-    broadcast: Map<Types.ChannelNumber, MessageWithState[]>;
+    direct: Map<number, Message[]>;
+    broadcast: Map<Types.ChannelNumber, Message[]>;
   };
   traceroutes: Map<
     number,
@@ -59,8 +57,10 @@ export interface Device {
   // currentMetrics: Protobuf.DeviceMetrics;
   pendingSettingsChanges: boolean;
   messageDraft: string;
-  queueStatus: QueueStatus,
-  isQueueingMessages: boolean,
+  queueStatus: QueueStatus;
+  messageQueue: MessageQueueItem[];
+  processor?: (item: MessageQueueItem) => Promise<void>;
+  isProcessing: boolean;
   dialog: {
     import: boolean;
     QR: boolean;
@@ -72,7 +72,6 @@ export interface Device {
     nodeDetails: boolean;
     unsafeRoles: boolean;
   };
-
 
   setStatus: (status: Types.DeviceStatusEnum) => void;
   setConfig: (config: Protobuf.Config.Config) => void;
@@ -90,25 +89,34 @@ export interface Device {
   addUser: (user: Types.PacketMetadata<Protobuf.Mesh.User>) => void;
   addPosition: (position: Types.PacketMetadata<Protobuf.Mesh.Position>) => void;
   addConnection: (connection: MeshDevice) => void;
-  addMessage: (message: MessageWithState) => void;
   addTraceRoute: (
     traceroute: Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery>,
   ) => void;
   addMetadata: (from: number, metadata: Protobuf.Mesh.DeviceMetadata) => void;
   removeNode: (nodeNum: number) => void;
-  setMessageState: (
-    type: "direct" | "broadcast",
-    channelIndex: Types.ChannelNumber,
-    to: number,
-    from: number,
-    messageId: number,
-    state: MessageState,
-  ) => void;
+
   setDialogOpen: (dialog: DialogVariant, open: boolean) => void;
   getDialogOpen: (dialog: DialogVariant) => boolean;
   processPacket: (data: ProcessPacketParams) => void;
   setMessageDraft: (message: string) => void;
-  setQueueStatus: (status: QueueStatus) => void;
+
+  /** Message processing */
+  // setMessageState: (
+  //   type: "direct" | "broadcast",
+  //   channelIndex: Types.ChannelNumber,
+  //   to: number,
+  //   from: number,
+  //   messageId: number,
+  //   state: MessageState,
+  // ) => void;
+  updateMessageStatus: (messageId: number, newState: MessageState) => void;
+  saveMessage: (message: Message) => void;
+  setProcessor: (processor: (item: MessageQueueItem) => Promise<void>) => void;
+  sendText: (text: string, to: number, channel: number, type: MessageType) => number;
+  sendTextDirectly: (text: string, to: number, channel?: number) => Promise<number>;
+  processQueue: () => Promise<void>;
+  removeFromQueue: (id: number) => void;
+  updateQueueStatus: (status: QueueStatus) => void;
 }
 
 export interface DeviceState {
@@ -151,7 +159,8 @@ export const useDeviceStore = createStore<DeviceState>((set, get) => ({
           queueStatus: {
             res: 0, free: 0, maxlen: 0
           },
-          isQueueingMessages: false,
+          messageQueue: [],
+          isProcessing: false,
           dialog: {
             import: false,
             QR: false,
@@ -166,6 +175,159 @@ export const useDeviceStore = createStore<DeviceState>((set, get) => ({
           pendingSettingsChanges: false,
           messageDraft: "",
 
+          setProcessor: (processor) => {
+            set(
+              produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (device) device.processor = processor;
+              })
+            );
+          },
+
+          sendText: (text: string, to: number, channel = 0, type: MessageType = to === 0 ? "broadcast" : "direct"): number => {
+            console.log("sendText called", text);
+            let messageItem: MessageQueueItem | undefined;
+            set(
+              produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (!device) {
+                  return;
+                }
+
+                messageItem = {
+                  id: randId(),
+                  data: {
+                    messageId: randId(),
+                    message: text,
+                    from: device.hardware?.myNodeNum ?? 0,
+                    to,
+                    date: new Date(),
+                    state: "waiting",
+                    channel,
+                    type,
+                  },
+                };
+
+                device.messageQueue.push(messageItem);
+              })
+            );
+
+            const device = get().devices.get(id);
+            if (device) {
+              device.processQueue();
+            }
+
+            return messageItem?.id ?? -1; // Fallback value if messageItem is undefined
+          },
+
+          // sendTextDirectly: (text, to = 0, channel = 0) => {
+          //   const device = get().devices.get(id);
+          //   if (!device || !device.connection) {
+          //     return;
+          //   }
+
+          //   try {
+          //     device.connection.sendText(text, to, true, channel);
+          //   } catch (error) {
+          //     console.error("Error sending message:", error);
+          //   }
+          // },
+
+          processQueue: async () => {
+            const device = get().devices.get(id);
+
+            // Exit early if no processing needed
+            if (!device || device.isProcessing || device.messageQueue.length === 0) return;
+
+            // Mark as processing
+            set(produce<DeviceState>((draft) => {
+              const device = draft.devices.get(id);
+              if (device) device.isProcessing = true;
+            }));
+
+            try {
+              // Process a single message from the queue
+              const currentItem = device.messageQueue[0];
+
+              // Remove item from queue first to prevent duplicate processing
+              set(produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (device) device.messageQueue = device.messageQueue.slice(1);
+              }));
+
+              // Apply backoff if needed
+              if (device.queueStatus.free <= 10) {
+                const backoffTime = Math.min(1000 * (11 - device.queueStatus.free), 2000);
+                await new Promise(resolve => setTimeout(resolve, backoffTime));
+              } else if (device.queueStatus.free <= 15) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+              }
+
+              // Send the message to the radio
+              const messageId = await device.connection?.sendText(
+                currentItem.data.message,
+                currentItem.data.to,
+                true,
+                currentItem.data.channel
+              );
+
+              if (messageId !== undefined) {
+                device.updateMessageStatus(messageId, "ack");
+                console.log(`Message sent: ${currentItem.data.message}`);
+              } else {
+                console.warn(`Failed to send message: ${currentItem.data.message}`);
+              }
+            } catch (error) {
+              console.error('Error processing message queue:', error);
+            } finally {
+              // Reset processing flag
+              set(produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (device) device.isProcessing = false;
+              }));
+
+              // Check if more messages need processing
+              if (device.messageQueue.length > 0) {
+                setTimeout(() => device.processQueue(), 100);
+              }
+            }
+          },
+          updateMessageStatus: (messageId: number, newState: MessageState) => {
+            set(
+              produce<DeviceState>((draft) => {
+                for (const device of draft.devices.values()) {
+                  const messages = [...device.messages.direct.values(), ...device.messages.broadcast.values()];
+
+                  // Find the message in the merged direct/broadcast array
+                  const message = messages.find((msg) => msg.messageId === messageId);
+
+                  if (message) {
+                    message.state = newState;
+                    return;
+                  }
+                }
+              })
+            );
+          },
+
+          removeFromQueue: (id: number) => {
+            set(
+              produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (device) {
+                  device.messageQueue = device.messageQueue.filter((msg) => msg.id !== id);
+                }
+              })
+            );
+          },
+          updateQueueStatus: (status) => {
+            set(
+              produce<DeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (device) device.queueStatus = status;
+              })
+            );
+          },
           setStatus: (status: Types.DeviceStatusEnum) => {
             set(
               produce<DeviceState>((draft) => {
@@ -492,7 +654,7 @@ export const useDeviceStore = createStore<DeviceState>((set, get) => ({
               }),
             );
           },
-          addMessage: (message) => {
+          saveMessage: (message) => {
             set(
               produce<DeviceState>((draft) => {
                 const device = draft.devices.get(id);
@@ -506,6 +668,9 @@ export const useDeviceStore = createStore<DeviceState>((set, get) => ({
                     : message.from
                   : message.channel;
                 const messages = messageGroup.get(messageIndex);
+
+                console.log('incoming message', message);
+
 
                 if (messages) {
                   messages.push(message);
@@ -653,17 +818,6 @@ export const useDeviceStore = createStore<DeviceState>((set, get) => ({
               }),
             );
           },
-          setQueueStatus: (status: QueueStatus) => {
-            set(
-              produce<DeviceState>((draft) => {
-                const device = draft.devices.get(id);
-                if (device) {
-                  device.queueStatus = status;
-                  device.queueStatus.free >= 10 ? true : false
-                }
-              }),
-            );
-          }
         });
       }),
     );

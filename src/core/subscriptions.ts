@@ -1,5 +1,6 @@
 import type { Device } from "@core/stores/deviceStore.ts";
 import { MeshDevice, Protobuf } from "@meshtastic/core";
+import PacketToMessageDTO from "@core/dto/PacketToMessageDTO.ts";
 
 export const subscribeAll = (
   device: Device,
@@ -63,15 +64,10 @@ export const subscribeAll = (
   });
 
   connection.events.onNodeInfoPacket.subscribe((nodeInfo) => {
-    // toast(`New Node Discovered: ${nodeInfo.user?.shortName ?? "UNK"}`, {
-    //   icon: "🔎"
-    // });
     device.addNodeInfo(nodeInfo);
   });
 
   connection.events.onChannelPacket.subscribe((channel) => {
-    console.log('channel', channel);
-
     device.addChannel(channel);
   });
   connection.events.onConfigPacket.subscribe((config) => {
@@ -82,13 +78,10 @@ export const subscribeAll = (
   });
 
   connection.events.onMessagePacket.subscribe((messagePacket) => {
-
-    console.log('messagePacket', messagePacket);
-
-    device.addMessage({
-      ...messagePacket,
-      state: messagePacket.from !== myNodeNum ? "ack" : "waiting",
-    });
+    // incoming and outgoing messages are handled by this event listener
+    const dto = new PacketToMessageDTO(messagePacket, myNodeNum);
+    const message = dto.toMessage();
+    device.saveMessage(message);
   });
 
   connection.events.onTraceRoutePacket.subscribe((traceRoutePacket) => {
@@ -110,9 +103,6 @@ export const subscribeAll = (
   });
 
   connection.events.onQueueStatus.subscribe((queueStatus) => {
-    device.setQueueStatus(queueStatus);
-    if (queueStatus.free < 10) {
-      // start queueing messages
-    }
+    device.updateQueueStatus(queueStatus);
   });
 };

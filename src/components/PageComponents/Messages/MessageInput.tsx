@@ -18,15 +18,10 @@ export const MessageInput = ({
   maxBytes,
 }: MessageInputProps) => {
   const {
-    connection,
-    setMessageState,
     messageDraft,
     setMessageDraft,
-    isQueueingMessages,
-    queueStatus,
-    hardware,
+    sendText,
   } = useDevice();
-  const myNodeNum = hardware.myNodeNum;
   const [localDraft, setLocalDraft] = useState(messageDraft);
   const [messageBytes, setMessageBytes] = useState(0);
 
@@ -36,38 +31,45 @@ export const MessageInput = ({
   );
 
   // sends the message to the selected destination
-  const sendText = useCallback(
-    async (message: string) => {
+  // const sendText = useCallback(
+  //   async (message: string) => {
 
-      await connection
-        ?.sendText(message, to, true, channel)
-        .then((id: number) =>
-          setMessageState(
-            to === "broadcast" ? "broadcast" : "direct",
-            channel,
-            to as number,
-            myNodeNum,
-            id,
-            "ack",
-          )
-        )
-        .catch((e: Types.PacketError) =>
-          setMessageState(
-            to === "broadcast" ? "broadcast" : "direct",
-            channel,
-            to as number,
-            myNodeNum,
-            e.id,
-            e.error,
-          )
-        );
+  //     await connection
+  //       ?.sendText(message, to, true, channel)
+  //       .then((id: number) =>
+  //         setMessageState(
+  //           to === "broadcast" ? "broadcast" : "direct",
+  //           channel,
+  //           to as number,
+  //           myNodeNum,
+  //           id,
+  //           "ack",
+  //         )
+  //       )
+  //       .catch((e: Types.PacketError) =>
+  //         setMessageState(
+  //           to === "broadcast" ? "broadcast" : "direct",
+  //           channel,
+  //           to as number,
+  //           myNodeNum,
+  //           e.id,
+  //           e.error,
+  //         )
+  //       );
+  //   },
+  //   [channel, connection, myNodeNum, setMessageState, to, queueStatus],
+  // );
+
+  const handleSendText = useCallback(
+    (message: string) => {
+      return sendText(message, to as number, channel);
     },
-    [channel, connection, myNodeNum, setMessageState, to, queueStatus],
+    [channel, sendText, to],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    const byteLength = new Blob([newValue]).size;
+    const newValue = e.target.value
+    const byteLength = new Blob([...newValue]).size;
 
     if (byteLength <= maxBytes) {
       setLocalDraft(newValue);
@@ -82,15 +84,13 @@ export const MessageInput = ({
         className="w-full"
         action={(formData: FormData) => {
           // prevent user from sending blank/empty message
-          if (localDraft === "") return;
           const message = formData.get("messageInput") as string;
+          if (message === "") return;
           startTransition(() => {
-            if (!isQueueingMessages) {
-              sendText(message);
-              setLocalDraft("");
-              setMessageDraft("");
-              setMessageBytes(0);
-            }
+            handleSendText(message);
+            setLocalDraft("");
+            setMessageDraft("");
+            setMessageBytes(0);
 
           });
         }}
@@ -102,6 +102,8 @@ export const MessageInput = ({
               minLength={1}
               name="messageInput"
               placeholder="Enter Message"
+
+              maxLength={maxBytes}
               value={localDraft}
               onChange={handleInputChange}
             />

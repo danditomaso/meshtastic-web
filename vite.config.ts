@@ -31,6 +31,7 @@ export default defineConfig({
   ],
   define: {
     'import.meta.env.VITE_COMMIT_HASH': JSON.stringify(hash),
+    globalThis: 'window'
   },
   resolve: {
     alias: {
