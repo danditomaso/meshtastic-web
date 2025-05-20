@@ -42,11 +42,13 @@ export const MessagesPage = () => {
     setChatType,
     setMessageState,
   } = useMessageStore();
+  const { getDeviceStatus } = useDevice();
   const { toast } = useToast();
   const { isCollapsed } = useSidebar();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const deferredSearch = useDeferredValue(searchTerm);
 
+  console.log(getDeviceStatus());
   const filteredNodes = (): NodeInfoWithUnread[] => {
     const lowerCaseSearchTerm = deferredSearch.toLowerCase();
 

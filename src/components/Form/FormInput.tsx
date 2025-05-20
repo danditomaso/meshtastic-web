@@ -16,6 +16,7 @@ export interface InputFieldProps<T> extends BaseFormBuilderProps<T> {
     suffix?: string;
     step?: number;
     className?: string;
+    placeholder?: string;
     fieldLength?: {
       min?: number;
       max?: number;

@@ -182,7 +182,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 />
                 <p
                   className={cn(
-                    "max-w-[20ch] text-wrap text-sm font-medium",
+                    "max-w-[20ch] text-balance text-sm font-medium",
                     "transition-all duration-300 ease-in-out overflow-hidden",
                     isCollapsed
                       ? "opacity-0 max-w-0 invisible"

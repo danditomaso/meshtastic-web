@@ -2,25 +2,127 @@ import {
   type FlagName,
   usePositionFlags,
 } from "@core/hooks/usePositionFlags.ts";
-import type { PositionValidation } from "@app/validation/config/position.ts";
+import {
+  type PositionValidation,
+  positionValidationSchema,
+} from "@app/validation/config/position.ts";
 import { create } from "@bufbuild/protobuf";
 import { DynamicForm } from "@components/Form/DynamicForm.tsx";
 import { useDevice } from "@core/stores/deviceStore.ts";
 import { Protobuf } from "@meshtastic/core";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { formatLatLong } from "@core/utils/position.ts";
 
 export const Position = () => {
-  const { config, setWorkingConfig } = useDevice();
+  const { config, getMyNode, setWorkingConfig, sendAdminMessage } = useDevice();
+
   const { flagsValue, activeFlags, toggleFlag, getAllFlags } = usePositionFlags(
     config?.position?.positionFlags ?? 0,
   );
+  const [fixedPositionToggle, setFixedPostionToggle] = useState(
+    config.position?.fixedPosition ?? false,
+  );
+
+  const handleGetFixedPosition = useCallback(() => {
+    const fixedPosition = config.position?.fixedPosition;
+
+    if (fixedPosition === true) {
+      const { latitudeI, longitudeI, altitude } = getMyNode().position || {};
+
+      if (latitudeI !== undefined && longitudeI !== undefined) {
+        const formattedPosition = formatLatLong(
+          {
+            latitude: latitudeI,
+            longitude: longitudeI,
+            altitude: altitude ?? 0,
+          },
+          "get",
+        );
+
+        return formattedPosition;
+      }
+    }
+
+    return undefined;
+  }, []);
+
+  const handleRemoveFixedPosition = () => {
+    return create(Protobuf.Admin.AdminMessageSchema, {
+      payloadVariant: {
+        case: "removeFixedPosition",
+        value: false,
+      },
+    });
+  };
+
+  const handleSetFixedPosition = (
+    positionSetting: PositionValidation["fixedPosition"],
+  ) => {
+    // if (positionSetting === false && config?.position.fixedPosition === false ?? }) {
+    //   return;
+    // }
+
+    // // if the fixed position was disabled and the config is set to true, remove the fixed position so we can update it.
+    // if (positionSetting === false && config.position?.fixedPosition) {
+    //   const removeMessage = handleRemoveFixedPosition();
+    //   sendAdminMessage(removeMessage);
+    // }
+
+    if (
+      typeof positionSetting.latitude !== "number" ||
+      typeof positionSetting.longitude !== "number" ||
+      typeof positionSetting.altitude !== "number"
+    ) {
+      console.warn(
+        "Fixed position data is incomplete: latitude, longitude, or altitude is not a defined number.",
+      );
+      return;
+    }
+
+    const { latitude, longitude, altitude } = formatLatLong(
+      {
+        altitude: positionSetting.altitude,
+        latitude: positionSetting.latitude,
+        longitude: positionSetting.longitude,
+      },
+      "update",
+    );
+    const removeMessage = handleRemoveFixedPosition();
+    sendAdminMessage(removeMessage);
+    // const setMessage = create(Protobuf.Admin.AdminMessageSchema, {
+    //   payloadVariant: {
+    //     case: "setFixedPosition",
+    //     value: {
+    //       latitudeI: latitude,
+    //       longitudeI: longitude,
+    //       altitude: altitude,
+    //     },
+    //   },
+    // });
+
+    // return sendAdminMessage(setMessage);
+  };
 
   const onSubmit = (data: PositionValidation) => {
+    console.log("onSubmit", data);
+
+    if (fixedPositionToggle === false) {
+      handleRemoveFixedPosition();
+    }
+
+    if (fixedPositionToggle) {
+      const fixedPosition = data.fixedPosition;
+      handleSetFixedPosition(fixedPosition);
+    }
+
     return setWorkingConfig(
       create(Protobuf.Config.ConfigSchema, {
         payloadVariant: {
           case: "position",
-          value: { ...data, positionFlags: flagsValue },
+          value: {
+            ...data,
+            positionFlags: flagsValue,
+          },
         },
       }),
     );
@@ -33,13 +135,25 @@ export const Position = () => {
     [toggleFlag],
   );
 
+  const fixedPositionValues = handleGetFixedPosition();
+
   return (
     <DynamicForm<PositionValidation>
+      submitType="onChange"
       onSubmit={(data) => {
         data.positionFlags = flagsValue;
         return onSubmit(data);
       }}
-      defaultValues={config.position}
+      schema={positionValidationSchema}
+      defaultValues={{
+        ...config.position,
+        positionFlags: flagsValue,
+        fixedPosition: {
+          latitude: fixedPositionValues?.latitude,
+          longitude: fixedPositionValues?.longitude,
+          altitude: fixedPositionValues?.altitude,
+        },
+      }}
       fieldGroups={[
         {
           label: "Position Settings",
@@ -63,11 +177,17 @@ export const Position = () => {
               },
             },
             {
-              type: "toggle",
+              type: "latlong",
               name: "fixedPosition",
               label: "Fixed Position",
               description:
                 "Don't report GPS position, but a manually-specified one",
+              toggleValue: fixedPositionToggle,
+              toggleLabel: fixedPositionToggle ? "Enabled" : "Disabled",
+              toggleOnChange: (newValue: boolean) => {
+                setFixedPostionToggle(newValue);
+              },
+              disabled: false,
             },
             {
               type: "multiSelect",

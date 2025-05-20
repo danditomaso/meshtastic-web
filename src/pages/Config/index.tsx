@@ -70,7 +70,7 @@ const ConfigPage = () => {
   const leftSidebar = useMemo(
     () => (
       <Sidebar>
-        <SidebarSection label="Modules">
+        <SidebarSection label="Modules" className="px-0">
           <SidebarButton
             label="Radio Config"
             active={activeConfigSection === "device"}

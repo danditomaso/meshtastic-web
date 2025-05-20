@@ -1,3 +1,5 @@
+import { numFormatter, pluralFormatter } from "./intl_formatter.ts";
+
 interface PluralForms {
   one: string;
   other: string;
@@ -21,8 +23,8 @@ export function formatQuantity(
     numberFormat: numberOptions = {},
   } = options;
 
-  const pluralRules = new Intl.PluralRules(locale, pluralOptions);
-  const numberFormat = new Intl.NumberFormat(locale, numberOptions);
+  const pluralRules = pluralFormatter(locale, pluralOptions);
+  const numberFormat = numFormatter(locale, numberOptions);
 
   const pluralCategory = pluralRules.select(value);
   const word = forms[pluralCategory];
@@ -39,7 +41,6 @@ export function validateMaxByteLength(
   value: string | null | undefined,
   maxByteLength: number,
 ): LengthValidationResult {
-  // Ensure maxByteLength is valid
   if (
     typeof maxByteLength !== "number" || !Number.isInteger(maxByteLength) ||
     maxByteLength < 0
@@ -50,12 +51,10 @@ export function validateMaxByteLength(
     return { isValid: false, currentLength: null }; // Cannot validate with invalid limit
   }
 
-  // Handle null or undefined input values
   if (value === null || value === undefined) {
     return { isValid: false, currentLength: null };
   }
 
-  // Check for TextEncoder availability
   if (typeof TextEncoder === "undefined") {
     console.error(
       "validateMaxByteLength: TextEncoder API is not available in this environment.",
@@ -64,16 +63,12 @@ export function validateMaxByteLength(
   }
 
   try {
-    // Encode the string to UTF-8 bytes and get the length
     const encoder = new TextEncoder();
     const currentLength = encoder.encode(value).length;
-    // Perform the byte length check
     const isValid = currentLength <= maxByteLength;
 
-    // Return the result object
     return { isValid, currentLength };
   } catch (error) {
-    // Handle potential errors during encoding
     console.error("validateMaxByteLength: Error encoding string:", error);
     return { isValid: false, currentLength: null }; // Encoding failed
   }

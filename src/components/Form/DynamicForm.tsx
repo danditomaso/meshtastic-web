@@ -14,6 +14,8 @@ import {
   useForm,
 } from "react-hook-form";
 import { Heading } from "@components/UI/Typography/Heading.tsx";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ZodSchema } from "zod";
 
 interface DisabledBy<T> {
   fieldName: Path<T>;
@@ -41,6 +43,7 @@ export interface GenericFormElementProps<T extends FieldValues, Y> {
 export interface DynamicFormProps<T extends FieldValues> {
   onSubmit: SubmitHandler<T>;
   submitType?: "onChange" | "onSubmit";
+  schema?: ZodSchema<T>;
   hasSubmitButton?: boolean;
   defaultValues?: DefaultValues<T>;
   fieldGroups: {
@@ -56,6 +59,7 @@ export interface DynamicFormProps<T extends FieldValues> {
 export function DynamicForm<T extends FieldValues>({
   onSubmit,
   submitType = "onChange",
+  schema,
   hasSubmitButton,
   defaultValues,
   fieldGroups,
@@ -63,6 +67,9 @@ export function DynamicForm<T extends FieldValues>({
   const { handleSubmit, control, getValues } = useForm<T>({
     mode: submitType,
     defaultValues: defaultValues,
+    resolver: schema ? zodResolver(schema) : undefined,
+    shouldFocusError: false,
+    progressive: true,
   });
 
   const isDisabled = (

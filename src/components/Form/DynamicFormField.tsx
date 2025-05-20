@@ -19,13 +19,15 @@ import {
   ToggleInput,
 } from "@components/Form/FormToggle.tsx";
 import type { Control, FieldValues } from "react-hook-form";
+import { FormLatLongInput, LatLongFieldProps } from "./FormLatLongInput.tsx";
 
 export type FieldProps<T> =
   | InputFieldProps<T>
   | SelectFieldProps<T>
   | MultiSelectFieldProps<T>
   | ToggleFieldProps<T>
-  | PasswordGeneratorProps<T>;
+  | PasswordGeneratorProps<T>
+  | LatLongFieldProps<T>;
 
 export interface DynamicFormFieldProps<T extends FieldValues> {
   field: FieldProps<T>;
@@ -73,6 +75,14 @@ export function DynamicFormField<T extends FieldValues>({
     case "multiSelect":
       return (
         <MultiSelectInput field={field} control={control} disabled={disabled} />
+      );
+    case "latlong":
+      return (
+        <FormLatLongInput
+          control={control}
+          field={field}
+          disabled={disabled}
+        />
       );
   }
 }
