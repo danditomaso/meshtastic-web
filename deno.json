@@ -32,21 +32,21 @@
   },
   "fmt": {
     "exclude": [
-      "src/routeTree.gen.ts",
+      "*.gen.ts",
       "*.test.ts",
       "*.test.tsx"
     ]
   },
   "lint": {
     "exclude": [
-      "src/routeTree.gen.ts",
+      "*.gen.ts",
       "*.test.ts",
       "*.test.tsx"
     ],
     "report": "pretty"
   },
   "exclude": [
-    "routeTree.gen.ts",
+    "*.gen.ts",
     "node_modules/",
     "dist",
     "build",
