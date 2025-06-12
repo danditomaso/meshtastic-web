@@ -86,7 +86,6 @@ describe("ParsedSecuritySchema", () => {
       publicKey: validKey,
       adminKey: [validKey, new Uint8Array(), new Uint8Array()],
     });
-
     expect(result.success).toBe(true);
   });
 
