@@ -41,6 +41,7 @@ export interface Device {
     number,
     Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery>
   >; // dont access directly, use getTraceRoutes
+  tracerouteCooldown: number; // timestamp when cooldown expires
   nodeErrors: Map<number, NodeError>;
   connection?: MeshDevice;
   activeNode: number;
@@ -106,6 +107,9 @@ export interface Device {
     nodeNum: number,
   ) => Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery> | undefined;
   clearTraceRoute: (nodeNum: number) => void;
+  setTracerouteCooldown: (timestamp: number) => void;
+  getTracerouteCooldown: () => number;
+  isTracerouteCooldownActive: () => boolean;
   addMetadata: (from: number, metadata: Protobuf.Mesh.DeviceMetadata) => void;
   removeNode: (nodeNum: number) => void;
   setDialogOpen: (dialog: DialogVariant, open: boolean) => void;
@@ -161,6 +165,7 @@ export const useDeviceStore = createStore<PrivateDeviceState>((set, get) => ({
           hardware: create(Protobuf.Mesh.MyNodeInfoSchema),
           metadata: new Map(),
           traceroutes: new Map(),
+          tracerouteCooldown: 0,
           connection: undefined,
           activeNode: 0,
           waypoints: [],
@@ -589,6 +594,31 @@ export const useDeviceStore = createStore<PrivateDeviceState>((set, get) => ({
                 device.traceroutes.delete(nodeNum);
               }),
             );
+          },
+          setTracerouteCooldown: (timestamp: number) => {
+            set(
+              produce<PrivateDeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (!device) {
+                  return;
+                }
+                device.tracerouteCooldown = timestamp;
+              }),
+            );
+          },
+          getTracerouteCooldown: () => {
+            const device = get().devices.get(id);
+            if (!device) {
+              return 0;
+            }
+            return device.tracerouteCooldown;
+          },
+          isTracerouteCooldownActive: () => {
+            const device = get().devices.get(id);
+            if (!device) {
+              return false;
+            }
+            return Date.now() < device.tracerouteCooldown;
           },
           removeNode: (nodeNum: number) => {
             set(

@@ -57,7 +57,7 @@
         "title": "Traceroute is running",
         "description": "Traceroute to {{nodeName}} is currently in progress."
       },
-      "error": {
+      "errorNotSpecified": {
         "title": "Traceroute error",
         "description": "An error occurred while sending the traceroute."
       },

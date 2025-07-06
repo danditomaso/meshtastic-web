@@ -10,7 +10,7 @@ import {
 import { TimeAgo } from "@components/generic/TimeAgo.tsx";
 import { useDevice } from "@core/stores/deviceStore.ts";
 import { useAppStore } from "@core/stores/appStore.ts";
-import { Protobuf } from "@meshtastic/core";
+import { Protobuf, Types } from "@meshtastic/core";
 import { numberToHexUnpadded } from "@noble/curves/abstract/utils";
 import { LockIcon, LockOpenIcon } from "lucide-react";
 import { type JSX, useDeferredValue, useMemo, useState } from "react";
@@ -24,6 +24,7 @@ import {
 import { FilterControl } from "@components/generic/Filter/FilterControl.tsx";
 import { useTranslation } from "react-i18next";
 import useLang from "@core/hooks/useLang.ts";
+import { LocationResponseDialog } from "@components/Dialog/LocationResponseDialog.tsx";
 
 export interface DeleteNoteDialogProps {
   open: boolean;
@@ -34,18 +35,17 @@ const NodesPage = (): JSX.Element => {
   const { t } = useTranslation("nodes");
   const { currentLanguage } = useLang();
   const {
-    getMyNode,
     getNodes,
     getTraceRoute,
     clearTraceRoute,
-    traceroutes,
     hasNodeError,
     setDialogOpen,
   } = useDevice();
+  const [selectedLocation, setSelectedLocation] = useState<
+    Types.PacketMetadata<Protobuf.Mesh.Position> | undefined
+  >();
   const { setNodeNumDetails, nodeNumDetails } = useAppStore();
   const { nodeFilter, defaultFilterValues, isFilterDirty } = useFilterNode();
-  const myNode = getMyNode();
-  console.log(traceroutes);
 
   const [filterState, setFilterState] = useState<FilterState>(() =>
     defaultFilterValues
@@ -236,19 +236,17 @@ const NodesPage = (): JSX.Element => {
             rows={tableRows}
           />
           <TracerouteResponseDialog
-            traceroute={getTraceRoute(myNode.num)}
-            open={!!nodeNumDetails}
+            traceroute={getTraceRoute(nodeNumDetails)}
+            open={!!getTraceRoute(nodeNumDetails)}
             onOpenChange={() => {
               clearTraceRoute(nodeNumDetails);
             }}
           />
-          {
-            /* <LocationResponseDialog
+          <LocationResponseDialog
             location={selectedLocation}
             open={!!selectedLocation}
             onOpenChange={() => setSelectedLocation(undefined)}
-          /> */
-          }
+          />
         </div>
       </PageLayout>
     </>

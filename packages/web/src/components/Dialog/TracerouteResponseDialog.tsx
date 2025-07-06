@@ -30,7 +30,6 @@ export const TracerouteResponseDialog = ({
     return null;
   }
 
-  console.log("TracerouteResponseDialog", traceroute);
   const route: number[] = traceroute?.data.route ?? [];
   const routeBack: number[] = traceroute?.data.routeBack ?? [];
   const snrTowards = (traceroute?.data.snrTowards ?? []).map((snr) => snr / 4);
@@ -62,8 +61,8 @@ export const TracerouteResponseDialog = ({
         <TraceRoute
           route={route}
           routeBack={routeBack}
-          from={{ user: from.user }}
-          to={{ user: toUser.user }}
+          from={{ user: toUser.user }}
+          to={{ user: from.user }}
           snrTowards={snrTowards}
           snrBack={snrBack}
         />

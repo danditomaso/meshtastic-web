@@ -9,6 +9,7 @@ import { Uptime } from "@components/generic/Uptime.tsx";
 import { toast } from "@core/hooks/useToast.ts";
 import { useFavoriteNode } from "@core/hooks/useFavoriteNode.ts";
 import { useIgnoreNode } from "@core/hooks/useIgnoreNode.ts";
+import { useTracerouteCooldown } from "@core/hooks/useTracerouteCooldown.ts";
 import { cn } from "@core/utils/cn.ts";
 
 import {
@@ -43,6 +44,7 @@ import {
   TooltipTrigger,
 } from "@components/UI/Tooltip.tsx";
 import { Separator } from "@components/UI/Seperator.tsx";
+import { CircularProgress } from "@components/UI/CircularProgress.tsx";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -61,6 +63,8 @@ export const NodeDetailsDialog = ({
   const { setNodeNumToBeRemoved, nodeNumDetails } = useAppStore();
   const { updateFavorite } = useFavoriteNode();
   const { updateIgnored } = useIgnoreNode();
+  const { isActive: isCooldownActive, progress, startCooldown, remainingTime } =
+    useTracerouteCooldown();
 
   const node = getNode(nodeNumDetails);
 
@@ -100,28 +104,28 @@ export const NodeDetailsDialog = ({
   }
 
   function handleTraceroute() {
-    if (!node) return;
+    if (!node || isCooldownActive) return;
 
-    toast({
-      title: t("toast.traceRoute.created.title", {
+    startCooldown();
+
+    const progressToast = toast({
+      title: t("toast.traceRoute.inProgress.title", {
         ns: "ui",
         nodeName: node.user?.shortName,
       }),
+      duration: 30000, // Keep toast for 30 seconds
     });
-    connection?.traceRoute(node.num).then(() =>
-      toast({
-        title: t("toast.traceRoute.inProgress.title", {
-          ns: "ui",
-          nodeName: node.user?.shortName,
-        }),
-      })
-    ).catch((error) => {
-      console.log("Traceroute error", error);
-      if (error.code === 3) {
+
+    connection?.traceRoute(node.num).then(() => {
+      // Success message - toast will auto-dismiss after cooldown
+      console.log("Traceroute request sent successfully");
+    }).catch((error) => {
+      // Dismiss progress toast or show error
+      progressToast.dismiss();
+      if (error.error === 3) {
         toast({
-          title: t("toast.traceRoute.errorTooManyRequests.title", { ns: "ui" }),
+          title: t("toast.traceRoute.errorNotSpecified.title", { ns: "ui" }),
           description: error.message,
-          variant: "destructive",
         });
       }
     });
@@ -201,14 +205,46 @@ export const NodeDetailsDialog = ({
                 <MessageSquareIcon className="mr-2" />
                 {t("nodeDetails.message")}
               </Button>
-              <Button
-                className="mr-1"
-                name="traceRoute"
-                onClick={handleTraceroute}
-              >
-                <WaypointsIcon className="mr-2" />
-                {t("nodeDetails.traceRoute")}
-              </Button>
+              {isCooldownActive
+                ? (
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="mr-1"
+                          name="traceRoute"
+                          onClick={handleTraceroute}
+                          disabled={isCooldownActive}
+                        >
+                          <CircularProgress
+                            progress={progress}
+                            size={16}
+                            strokeWidth={2}
+                            className="mr-2"
+                          />
+                          {t("nodeDetails.traceRoute")}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-800 dark:bg-slate-600 text-white px-4 py-2 rounded text-xs max-w-xs break-words">
+                        {t("nodeDetails.tracerouteCooldown", {
+                          seconds: Math.ceil(remainingTime / 1000),
+                        })}
+                        <TooltipArrow className="fill-slate-800 dark:fill-slate-600" />
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+                : (
+                  <Button
+                    className="mr-1"
+                    name="traceRoute"
+                    onClick={handleTraceroute}
+                    disabled={isCooldownActive}
+                  >
+                    <WaypointsIcon className="mr-2" />
+                    {t("nodeDetails.traceRoute")}
+                  </Button>
+                )}
               <Button className="mr-1" onClick={handleToggleFavorite}>
                 <StarIcon
                   className={cn(
