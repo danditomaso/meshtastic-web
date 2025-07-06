@@ -97,6 +97,8 @@ export const subscribeAll = (
   });
 
   connection.events.onTraceRoutePacket.subscribe((traceRoutePacket) => {
+    console.log("TraceRoutePacket deviceStore", traceRoutePacket);
+
     device.addTraceRoute({
       ...traceRoutePacket,
     });

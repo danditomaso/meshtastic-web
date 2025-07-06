@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../UI/Dialog.tsx";
@@ -26,6 +25,12 @@ export const TracerouteResponseDialog = ({
 }: TracerouteResponseDialogProps) => {
   const { t } = useTranslation("dialog");
   const { getNode } = useDevice();
+
+  if (!traceroute?.data) {
+    return null;
+  }
+
+  console.log("TracerouteResponseDialog", traceroute);
   const route: number[] = traceroute?.data.route ?? [];
   const routeBack: number[] = traceroute?.data.routeBack ?? [];
   const snrTowards = (traceroute?.data.snrTowards ?? []).map((snr) => snr / 4);
@@ -43,7 +48,6 @@ export const TracerouteResponseDialog = ({
   if (!toUser || !from) {
     return null;
   }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -55,16 +59,14 @@ export const TracerouteResponseDialog = ({
             })}
           </DialogTitle>
         </DialogHeader>
-        <DialogDescription>
-          <TraceRoute
-            route={route}
-            routeBack={routeBack}
-            from={{ user: from.user }}
-            to={{ user: toUser.user }}
-            snrTowards={snrTowards}
-            snrBack={snrBack}
-          />
-        </DialogDescription>
+        <TraceRoute
+          route={route}
+          routeBack={routeBack}
+          from={{ user: from.user }}
+          to={{ user: toUser.user }}
+          snrTowards={snrTowards}
+          snrBack={snrBack}
+        />
       </DialogContent>
     </Dialog>
   );

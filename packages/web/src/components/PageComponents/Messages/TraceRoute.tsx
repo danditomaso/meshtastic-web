@@ -29,7 +29,7 @@ const RoutePath = (
   const { t } = useTranslation();
 
   return (
-    <span
+    <div
       id={title}
       className="ml-4 border-l-2 pl-2 border-l-slate-900 text-slate-900 dark:text-slate-100 dark:border-l-slate-100"
     >
@@ -52,7 +52,7 @@ const RoutePath = (
         </span>
       ))}
       <p>{to?.user?.longName}</p>
-    </span>
+    </div>
   );
 };
 
@@ -65,6 +65,7 @@ export const TraceRoute = ({
   snrBack,
 }: TraceRouteProps) => {
   const { t } = useTranslation("dialog");
+
   return (
     <div className="ml-5 flex">
       <RoutePath

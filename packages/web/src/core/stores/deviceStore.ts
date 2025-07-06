@@ -39,8 +39,8 @@ export interface Device {
   metadata: Map<number, Protobuf.Mesh.DeviceMetadata>;
   traceroutes: Map<
     number,
-    Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery>[]
-  >;
+    Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery>
+  >; // dont access directly, use getTraceRoutes
   nodeErrors: Map<number, NodeError>;
   connection?: MeshDevice;
   activeNode: number;
@@ -102,6 +102,10 @@ export interface Device {
   addTraceRoute: (
     traceroute: Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery>,
   ) => void;
+  getTraceRoute: (
+    nodeNum: number,
+  ) => Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery> | undefined;
+  clearTraceRoute: (nodeNum: number) => void;
   addMetadata: (from: number, metadata: Protobuf.Mesh.DeviceMetadata) => void;
   removeNode: (nodeNum: number) => void;
   setDialogOpen: (dialog: DialogVariant, open: boolean) => void;
@@ -557,13 +561,32 @@ export const useDeviceStore = createStore<PrivateDeviceState>((set, get) => ({
             );
           },
           addTraceRoute: (traceroute) => {
+            console.log("Adding traceroute", traceroute);
             set(
               produce<PrivateDeviceState>((draft) => {
                 const device = draft.devices.get(id);
                 if (!device) return;
-                const routes = device.traceroutes.get(traceroute.from) ?? [];
-                routes.push(traceroute);
-                device.traceroutes.set(traceroute.from, routes);
+                device.traceroutes.set(traceroute.to, traceroute);
+              }),
+            );
+          },
+          getTraceRoute: (
+            nodeNum: number,
+          ): Types.PacketMetadata<Protobuf.Mesh.RouteDiscovery> | undefined => {
+            const device = get().devices.get(id);
+            if (!device) {
+              return;
+            }
+            return device.traceroutes.get(nodeNum);
+          },
+          clearTraceRoute: (nodeNum: number) => {
+            set(
+              produce<PrivateDeviceState>((draft) => {
+                const device = draft.devices.get(id);
+                if (!device) {
+                  return;
+                }
+                device.traceroutes.delete(nodeNum);
               }),
             );
           },

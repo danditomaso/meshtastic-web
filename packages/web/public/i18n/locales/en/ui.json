@@ -48,7 +48,24 @@
   "toast": {
     "positionRequestSent": { "title": "Position request sent." },
     "requestingPosition": { "title": "Requesting position, please wait..." },
-    "sendingTraceroute": { "title": "Sending Traceroute, please wait..." },
+    "traceRoute": {
+      "created": {
+        "title": "Traceroute started",
+        "description": "Traceroute to {{nodeName}} has been created."
+      },
+      "inProgress": {
+        "title": "Traceroute is running",
+        "description": "Traceroute to {{nodeName}} is currently in progress."
+      },
+      "error": {
+        "title": "Traceroute error",
+        "description": "An error occurred while sending the traceroute."
+      },
+      "errorTooManyRequests": {
+        "title": "Traceroute error",
+        "description": "You can only request a traceroute once every 30 seconds. "
+      }
+    },
     "tracerouteSent": { "title": "Traceroute sent." },
     "savedChannel": { "title": "Saved Channel: {{channelName}}" },
     "messages": {

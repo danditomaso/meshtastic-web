@@ -103,13 +103,28 @@ export const NodeDetailsDialog = ({
     if (!node) return;
 
     toast({
-      title: t("toast.sendingTraceroute.title", { ns: "ui" }),
+      title: t("toast.traceRoute.created.title", {
+        ns: "ui",
+        nodeName: node.user?.shortName,
+      }),
     });
     connection?.traceRoute(node.num).then(() =>
       toast({
-        title: t("toast.tracerouteSent.title", { ns: "ui" }),
+        title: t("toast.traceRoute.inProgress.title", {
+          ns: "ui",
+          nodeName: node.user?.shortName,
+        }),
       })
-    );
+    ).catch((error) => {
+      console.log("Traceroute error", error);
+      if (error.code === 3) {
+        toast({
+          title: t("toast.traceRoute.errorTooManyRequests.title", { ns: "ui" }),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
     onOpenChange(false);
   }
 
