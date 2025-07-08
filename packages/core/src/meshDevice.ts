@@ -203,10 +203,20 @@ export class MeshDevice {
       meshPacket.rxTime = Math.trunc(new Date().getTime() / 1000);
       this.handleMeshPacket(meshPacket);
     }
-    return await this.sendRaw(
-      toBinary(Protobuf.Mesh.ToRadioSchema, toRadioMessage),
-      meshPacket.id,
-    );
+    try {
+      return await this.sendRaw(
+        toBinary(Protobuf.Mesh.ToRadioSchema, toRadioMessage),
+        meshPacket.id,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        this.log.error(
+          Emitter[Emitter.SendPacket],
+          `Error sending packet: ${error.message}`,
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -772,11 +782,23 @@ export class MeshDevice {
       route: [],
     });
 
-    return await this.sendPacket(
-      toBinary(Protobuf.Mesh.RouteDiscoverySchema, routeDiscovery),
-      Protobuf.Portnums.PortNum.TRACEROUTE_APP,
-      destination,
-    );
+    try {
+      this.log.debug(
+        Emitter[Emitter.TraceRoute],
+        `🧭 Sending trace route packet to ${destination}`,
+      );
+      return await this.sendPacket(
+        toBinary(Protobuf.Mesh.RouteDiscoverySchema, routeDiscovery),
+        Protobuf.Portnums.PortNum.TRACEROUTE_APP,
+        destination,
+      );
+    } catch (error) {
+      this.log.error(
+        Emitter[Emitter.TraceRoute],
+        `🚧 Error sending trace route packet: ${error}`,
+      );
+      throw error;
+    }
   }
 
   /**

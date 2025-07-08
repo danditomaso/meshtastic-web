@@ -96,6 +96,7 @@ export const subscribeAll = (
     }
   });
 
+  connection.events.onCannedMessageModulePacket;
   connection.events.onTraceRoutePacket.subscribe((traceRoutePacket) => {
     console.log("TraceRoutePacket deviceStore", traceRoutePacket);
 

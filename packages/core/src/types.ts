@@ -99,6 +99,8 @@ export enum Emitter {
   EnterDfuMode = 31,
   RemoveNodeByNum = 32,
   SetCannedMessages = 33,
+  TraceRoute = 34,
+  FileInfo = 35,
 }
 
 export interface LogEvent {

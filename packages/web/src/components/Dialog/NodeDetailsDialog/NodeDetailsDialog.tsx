@@ -108,17 +108,16 @@ export const NodeDetailsDialog = ({
 
     startCooldown();
 
-    const progressToast = toast({
-      title: t("toast.traceRoute.inProgress.title", {
-        ns: "ui",
-        nodeName: node.user?.shortName,
-      }),
-      duration: 30000, // Keep toast for 30 seconds
-    });
+    let progressToast: ReturnType<typeof toast>;
 
     connection?.traceRoute(node.num).then(() => {
-      // Success message - toast will auto-dismiss after cooldown
-      console.log("Traceroute request sent successfully");
+      progressToast = toast({
+        title: t("toast.traceRoute.inProgress.title", {
+          ns: "ui",
+          nodeName: node.user?.shortName,
+        }),
+        duration: 30000, // Show toast for 30 seconds
+      });
     }).catch((error) => {
       // Dismiss progress toast or show error
       progressToast.dismiss();
@@ -128,8 +127,10 @@ export const NodeDetailsDialog = ({
           description: error.message,
         });
       }
+    }).finally(() => {
+      // Reset cooldown after the operation is complete
+      onOpenChange(false);
     });
-    onOpenChange(false);
   }
 
   function handleNodeRemove() {
