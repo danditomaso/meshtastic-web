@@ -21,6 +21,7 @@ All projects are located within the `packages/` directory:
   - **[Hosted version](https://client.meshtastic.org)**
 - **`packages/core`:** Core functionality for Meshtastic JS.
 - **`packages/transport-deno`:** TCP Transport for the Deno runtime.
+- **`packages/transport-node`:** TCP Transport for the NodeJS runtime.
 - **`packages/transport-http`:** HTTP Transport.
 - **`packages/transport-web-bluetooth`:** Web Bluetooth Transport.
 - **`packages/transport-web-serial`:** Web Serial Transport.
