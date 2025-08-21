@@ -61,15 +61,15 @@ jobs:
             pnpm --filter "./$dir" run build
           done
 
-      - name: Sync jsr.json version from package.json
+      - name: Sync jsr.json from package.json with pkg-to-jsr
         run: |
           IFS=',' read -ra TARGETS <<< "${{ steps.pkgs.outputs.list }}"
           for dir in "${TARGETS[@]}"; do
-            if [ -f "$dir/jsr.json" ] && [ -f "$dir/package.json" ]; then
-              PKG_VER=$(jq -r .version "$dir/package.json")
-              jq --arg v "$PKG_VER" '.version = $v' "$dir/jsr.json" > "$dir/jsr.json.tmp" && mv "$dir/jsr.json.tmp" "$dir/jsr.json"
-              echo "Updated $dir/jsr.json to version $PKG_VER"
-            fi
+            if [ -f "$dir/package.json" ]; then
+            echo "::group::pkg-to-jsr $dir"
+            pnpm dlx pkg-to-jsr --root "$dir"
+            echo "::endgroup::"
+          fi
           done
 
       - name: Publish to JSR (OIDC)
@@ -78,13 +78,9 @@ jobs:
           IFS=',' read -ra TARGETS <<< "${{ steps.pkgs.outputs.list }}"
           for dir in "${TARGETS[@]}"; do
             if [ -f "$dir/jsr.json" ]; then
-              echo "Publishing $dir to JSR via OIDC…"
+              echo "Publishing $dir to JSR…"
               cd "$dir"
-              [ -d dist ] || pnpm run build
-              if ! npx --yes jsr publish 2>&1 | tee jsr_publish.log; then
-                echo "JSR publish failed for $dir. Error output:"
-                cat jsr_publish.log
-              fi
+              [ -d dist ] || pnpm run publish:jsr
               cd - >/dev/null
             fi
           done
@@ -92,7 +88,7 @@ jobs:
       - name: Replace exports entry in package.json
         run: |
           tmp=$(mktemp)
-          jq '.exports["."] = "./dist/mod.mjs"' package.json > "$tmp" \
+          jq '.exports["."] = "./dist/mod.js"' package.json > "$tmp" \
           && mv "$tmp" package.json
 
       - name: Publish to npm
