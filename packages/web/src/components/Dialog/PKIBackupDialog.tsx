@@ -1,4 +1,4 @@
-import { Button } from "@components/UI/Button.tsx";
+import { Button } from "@app/components/UI/Button";
 import {
   Dialog,
   DialogClose,
@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
+} from "@app/components/UI/Dialog";
 import { useDevice, useNodeDB } from "@core/stores";
 import { fromByteArray } from "base64-js";
 import { DownloadIcon, PrinterIcon } from "lucide-react";

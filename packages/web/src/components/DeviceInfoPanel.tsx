@@ -13,9 +13,10 @@ import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import BatteryStatus from "./BatteryStatus.tsx";
 import LanguageSwitcher from "./LanguageSwitcher.tsx";
-import ThemeSwitcher from "./ThemeSwitcher.tsx";
+import { MeshAvatar } from "./MeshAvatar.tsx";
+import { ThemeToggle } from "./ThemeToggle.tsx";
+// import ThemeSwitcher from "./ThemeSwitcher.tsx";
 import type { DeviceMetrics } from "./types.ts";
-import { Avatar } from "./UI/Avatar.tsx";
 import { Button } from "./UI/Button.tsx";
 import { Subtle } from "./UI/Typography/Subtle.tsx";
 
@@ -89,7 +90,7 @@ export const DeviceInfoPanel = ({
       id: "theme",
       label: t("theme.changeTheme"),
       icon: Palette,
-      render: () => <ThemeSwitcher />,
+      render: () => <ThemeToggle />,
     },
     {
       id: "changeName",
@@ -120,7 +121,7 @@ export const DeviceInfoPanel = ({
           isCollapsed && "justify-center",
         )}
       >
-        <Avatar
+        <MeshAvatar
           text={user.shortName}
           className={cn("flex-shrink-0", isCollapsed && "")}
           size="sm"

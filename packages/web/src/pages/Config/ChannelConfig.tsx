@@ -1,5 +1,5 @@
 import { Channel } from "@app/components/PageComponents/ChannelConfig/Channel";
-import { Button } from "@components/UI/Button.tsx";
+import { Button } from "@app/components/UI/Button";
 import { Spinner } from "@components/UI/Spinner.tsx";
 import {
   Tabs,

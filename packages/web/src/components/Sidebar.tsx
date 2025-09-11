@@ -23,6 +23,7 @@ import type React from "react";
 import { useEffect, useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { DeviceInfoPanel } from "./DeviceInfoPanel.tsx";
+import { P } from "./UI/Typography/P.tsx";
 
 export interface SidebarProps {
   children?: React.ReactNode;
@@ -182,14 +183,14 @@ export const Sidebar = ({ children }: SidebarProps) => {
         {myNode === undefined ? (
           <div className="flex flex-col items-center justify-center py-6">
             <Spinner />
-            <Subtle
+            <p
               className={cn(
                 "mt-4 transition-opacity duration-300",
                 isCollapsed ? "opacity-0 invisible" : "opacity-100 visible",
               )}
             >
               {t("loading")}
-            </Subtle>
+            </p>
           </div>
         ) : (
           <DeviceInfoPanel

@@ -1,5 +1,5 @@
-import { Button } from "@components/UI/Button.tsx";
-import { Input } from "@components/UI/Input.tsx";
+import { Button } from "@app/components/UI/Button";
+import { Input } from "@app/components/UI/Input";
 import { useMessages } from "@core/stores";
 import type { Types } from "@meshtastic/core";
 import { SendIcon } from "lucide-react";

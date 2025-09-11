@@ -1,13 +1,13 @@
-import { BLE } from "@components/PageComponents/Connect/BLE.tsx";
-import { HTTP } from "@components/PageComponents/Connect/HTTP.tsx";
-import { Serial } from "@components/PageComponents/Connect/Serial.tsx";
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
+} from "@app/components/UI/Dialog.tsx";
+import { BLE } from "@components/PageComponents/Connect/BLE.tsx";
+import { HTTP } from "@components/PageComponents/Connect/HTTP.tsx";
+import { Serial } from "@components/PageComponents/Connect/Serial.tsx";
 import {
   Tabs,
   TabsContent,

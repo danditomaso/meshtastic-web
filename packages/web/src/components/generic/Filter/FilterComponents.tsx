@@ -1,7 +1,6 @@
 import type { FilterState } from "@components/generic/Filter/useFilterNode.ts";
 import {
   AccordionContent,
-  AccordionHeader,
   AccordionItem,
   AccordionTrigger,
 } from "@components/UI/Accordion.tsx";
@@ -56,15 +55,13 @@ export const FilterAccordionItem = ({
 }: FilterAccordionItemProps) => {
   return (
     <AccordionItem value={label}>
-      <AccordionHeader>
-        <AccordionTrigger
-          className={cn(
-            "w-full text-left font-bold text-sm px-1 py-2 dark:border-slate-700 text-slate-800 dark:text-slate-200",
-          )}
-        >
-          {label}
-        </AccordionTrigger>
-      </AccordionHeader>
+      <AccordionTrigger
+        className={cn(
+          "w-full text-left font-bold text-sm px-1 py-2 dark:border-slate-700 text-slate-800 dark:text-slate-200",
+        )}
+      >
+        {label}
+      </AccordionTrigger>
       <AccordionContent
         className={cn("px-1 pb-4 pt-2 space-y-3 dark:border-slate-700")}
       >

@@ -1,3 +1,4 @@
+import { Input } from "@app/components/UI/Input";
 import {
   FilterAccordionItem,
   FilterMulti,
@@ -7,7 +8,6 @@ import {
 import type { FilterState } from "@components/generic/Filter/useFilterNode.ts";
 import { TimeAgo } from "@components/generic/TimeAgo.tsx";
 import { Accordion } from "@components/UI/Accordion.tsx";
-import { Input } from "@components/UI/Input.tsx";
 import {
   Popover,
   PopoverContent,

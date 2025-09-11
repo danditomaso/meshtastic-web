@@ -1,6 +1,6 @@
+import { Button } from "@app/components/UI/Button";
+import { Input } from "@app/components/UI/Input";
 import type { TabElementProps } from "@components/Dialog/NewDeviceDialog.tsx";
-import { Button } from "@components/UI/Button.tsx";
-import { Input } from "@components/UI/Input.tsx";
 import { Label } from "@components/UI/Label.tsx";
 import { Switch } from "@components/UI/Switch.tsx";
 import { Link } from "@components/UI/Typography/Link.tsx";
@@ -97,7 +97,6 @@ export const HTTP = ({ closeDialog }: TabElementProps) => {
                 : `${t("newDeviceDialog.http")}://`
             }
             placeholder={t("newDeviceDialog.httpConnection.placeholder")}
-            className="text-slate-900 dark:text-slate-100"
             {...register("ip")}
           />
         </div>

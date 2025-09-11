@@ -134,8 +134,8 @@ export const Table = ({ headings, rows }: TableProps) => {
             key={row.id}
             className={cn(
               row.isFavorite
-                ? "bg-yellow-100/30 dark:bg-slate-800 odd:bg-yellow-200/30 dark:odd:bg-slate-600/40"
-                : "bg-white dark:bg-slate-900 odd:bg-slate-200/40 dark:odd:bg-slate-800/40",
+                ? "bg-yellow-100/30  odd:bg-yellow-200/30"
+                : "odd:bg-slate-200/25 ",
             )}
           >
             {row.cells.map((cell, cellIndex) => {

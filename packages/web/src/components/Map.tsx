@@ -1,4 +1,3 @@
-import { useTheme } from "@core/hooks/useTheme.ts";
 import { useEffect, useRef } from "react";
 import MapGl, {
   AttributionControl,
@@ -6,6 +5,7 @@ import MapGl, {
   NavigationControl,
   ScaleControl,
 } from "react-map-gl/maplibre";
+import { useTheme } from "./ThemeProvider.tsx";
 
 interface MapProps {
   children?: React.ReactNode;

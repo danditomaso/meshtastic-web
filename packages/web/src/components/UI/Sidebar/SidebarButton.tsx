@@ -1,4 +1,4 @@
-import { Button } from "@components/UI/Button.tsx";
+import { Button } from "@app/components/UI/Button";
 import { useSidebar } from "@core/stores";
 import { cn } from "@core/utils/cn.ts";
 import type { LucideIcon } from "lucide-react";

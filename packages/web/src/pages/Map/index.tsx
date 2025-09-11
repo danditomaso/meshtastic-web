@@ -1,3 +1,4 @@
+import { MeshAvatar } from "@app/components/MeshAvatar.tsx";
 import { FilterControl } from "@components/generic/Filter/FilterControl.tsx";
 import {
   type FilterState,
@@ -14,7 +15,6 @@ import { FunnelIcon, MapPinIcon } from "lucide-react";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { Marker, Popup, useMap } from "react-map-gl/maplibre";
 import { NodeDetail } from "../../components/PageComponents/Map/NodeDetail.tsx";
-import { Avatar } from "../../components/UI/Avatar.tsx";
 
 type NodePosition = {
   latitude: number;
@@ -123,7 +123,7 @@ const MapPage = () => {
             anchor="bottom"
             onClick={(e) => handleMarkerClick(node, e)}
           >
-            <Avatar
+            <MeshAvatar
               text={node.user?.shortName?.toString() ?? node.num.toString()}
               className="border-[1.5px] border-slate-600 shadow-m shadow-slate-600"
               showError={hasNodeError(node.num)}

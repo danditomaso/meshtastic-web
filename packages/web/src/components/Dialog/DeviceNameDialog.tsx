@@ -1,6 +1,4 @@
-import { create } from "@bufbuild/protobuf";
-import { GenericInput } from "@components/Form/FormInput.tsx";
-import { Button } from "@components/UI/Button.tsx";
+import { Button } from "@app/components/UI/Button.tsx";
 import {
   Dialog,
   DialogClose,
@@ -9,7 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
+} from "@app/components/UI/Dialog.tsx";
+import { create } from "@bufbuild/protobuf";
+import { GenericInput } from "@components/Form/FormInput.tsx";
 import { useDevice, useNodeDB } from "@core/stores";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Protobuf } from "@meshtastic/core";
@@ -89,7 +89,6 @@ export const DeviceNameDialog = ({
                 label: t("deviceName.longName"),
                 type: "text",
                 properties: {
-                  className: "text-slate-900 dark:text-slate-200",
                   fieldLength: {
                     currentValueLength: getValues("longName").length,
                     max: 40,

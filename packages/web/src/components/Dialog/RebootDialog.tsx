@@ -1,5 +1,4 @@
-import { Button } from "@components/UI/Button.tsx";
-import { Checkbox } from "@components/UI/Checkbox/index.tsx";
+import { Button } from "@app/components/UI/Button";
 import {
   Dialog,
   DialogClose,
@@ -7,8 +6,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
-import { Input } from "@components/UI/Input.tsx";
+} from "@app/components/UI/Dialog";
+import { Input } from "@app/components/UI/Input";
+import { Checkbox } from "@components/UI/Checkbox/index.tsx";
 import { Label } from "@components/UI/Label.tsx";
 import { Separator } from "@components/UI/Separator.tsx";
 import { useDevice } from "@core/stores";

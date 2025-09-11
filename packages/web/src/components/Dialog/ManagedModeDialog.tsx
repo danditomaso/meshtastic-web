@@ -1,5 +1,4 @@
-import { Button } from "@components/UI/Button.tsx";
-import { Checkbox } from "@components/UI/Checkbox/index.tsx";
+import { Button } from "@app/components/UI/Button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
+} from "@app/components/UI/Dialog";
+import { Checkbox } from "@components/UI/Checkbox/index.tsx";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 

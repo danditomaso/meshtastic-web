@@ -1,6 +1,5 @@
 import { Heading } from "@components/UI/Typography/Heading.tsx";
 import { Link } from "@components/UI/Typography/Link.tsx";
-import { P } from "@components/UI/Typography/P.tsx";
 import newGithubIssueUrl from "@core/utils/github.ts";
 import { ExternalLink } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
@@ -13,22 +12,20 @@ export function ErrorPage({ error }: { error: Error }) {
   }
 
   return (
-    <article className="w-full h-screen overflow-y-auto bg-background-primary text-text-primary">
-      <section className="flex shrink md:flex-row gap-16 mt-20 px-4 md:px-8 text-lg md:text-xl space-y-2 place-items-center dark:bg-background-primary text-slate-900 dark:text-text-primary">
+    <article className="w-full h-screen overflow-y-auto">
+      <section className="flex shrink md:flex-row gap-16 mt-20 px-4 md:px-8 text-lg md:text-xl space-y-2 place-items-center">
         <div>
-          <Heading as="h2" className="text-text-primary">
-            {t("errorPage.title")}
-          </Heading>
-          <P>{t("errorPage.description1")}</P>
-          <P>{t("errorPage.description2")}</P>
-          <P>Please include the following information in your report:</P>
+          <Heading as="h2">{t("errorPage.title")}</Heading>
+          <p>{t("errorPage.description1")}</p>
+          <p>{t("errorPage.description2")}</p>
+          <p>Please include the following information in your report:</p>
           <ul className="list-disc list-inside text-sm">
             <li>{t("errorPage.reportSteps.step1")}</li>
             <li>{t("errorPage.reportSteps.step2")}</li>
             <li>{t("errorPage.reportSteps.step3")}</li>
             <li>{t("errorPage.reportSteps.step4")}</li>
           </ul>
-          <P>
+          <p>
             <Trans
               i18nKey="errorPage.reportLink"
               components={[
@@ -45,13 +42,13 @@ export function ErrorPage({ error }: { error: Error }) {
               ]}
             />
             <ExternalLink size={24} className="inline-block ml-2" />
-          </P>
-          <P>
+          </p>
+          <p>
             <Trans
               i18nKey="errorPage.dashboardLink"
               components={[<Link key="dashboard" href="/" />]}
             />
-          </P>
+          </p>
         </div>
 
         <div className="hidden md:block md:max-w-64 lg:max-w-80 w-full aspect-suqare">
@@ -92,9 +89,7 @@ export function ErrorPage({ error }: { error: Error }) {
             </>
           )}
           {!error?.message && !error?.stack && (
-            <p className="text-slate-400">
-              {t("errorPage.fallbackError", { error: error.toString() })}
-            </p>
+            <p>{t("errorPage.fallbackError", { error: error.toString() })}</p>
           )}
         </span>
       </details>

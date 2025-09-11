@@ -1,5 +1,5 @@
+import { Button } from "@app/components/UI/Button.tsx";
 import { Mono } from "@components/generic/Mono.tsx";
-import { Button } from "@components/UI/Button.tsx";
 import {
   useAppStore,
   useDeviceStore,

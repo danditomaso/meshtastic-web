@@ -1,5 +1,6 @@
 import { LocationResponseDialog } from "@app/components/Dialog/LocationResponseDialog.tsx";
 import { TracerouteResponseDialog } from "@app/components/Dialog/TracerouteResponseDialog.tsx";
+import { Input } from "@app/components/UI/Input";
 import { FilterControl } from "@components/generic/Filter/FilterControl.tsx";
 import {
   type FilterState,
@@ -12,10 +13,9 @@ import {
   Table,
 } from "@components/generic/Table/index.tsx";
 import { TimeAgo } from "@components/generic/TimeAgo.tsx";
+import { MeshAvatar } from "@components/MeshAvatar.tsx";
 import { PageLayout } from "@components/PageLayout.tsx";
 import { Sidebar } from "@components/Sidebar.tsx";
-import { Avatar } from "@components/UI/Avatar.tsx";
-import { Input } from "@components/UI/Input.tsx";
 import useLang from "@core/hooks/useLang.ts";
 import { useAppStore, useDevice, useNodeDB } from "@core/stores";
 import { Protobuf, type Types } from "@meshtastic/core";
@@ -131,7 +131,7 @@ const NodesPage = (): JSX.Element => {
       cells: [
         {
           content: (
-            <Avatar
+            <MeshAvatar
               text={node.user?.shortName ?? t("unknown.shortName")}
               showFavorite={node.isFavorite}
               showError={hasNodeError(node.num)}

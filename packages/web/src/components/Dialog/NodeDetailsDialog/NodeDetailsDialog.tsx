@@ -1,3 +1,12 @@
+import { Button } from "@app/components/UI/Button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@app/components/UI/Dialog";
 import { DeviceImage } from "@components/generic/DeviceImage.tsx";
 import { TimeAgo } from "@components/generic/TimeAgo.tsx";
 import { Uptime } from "@components/generic/Uptime.tsx";
@@ -7,19 +16,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@components/UI/Accordion.tsx";
-import { Button } from "@components/UI/Button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@components/UI/Dialog.tsx";
 import { Separator } from "@components/UI/Separator.tsx";
 import {
   Tooltip,
-  TooltipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -243,7 +242,7 @@ export const NodeDetailsDialog = ({
                     {isIgnoredState
                       ? t("nodeDetails.unignoreNode")
                       : t("nodeDetails.ignoreNode")}
-                    <TooltipArrow className="fill-slate-800 dark:fill-slate-600" />
+                    {/* <TooltipArrow className="fill-slate-800 dark:fill-slate-600" /> */}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

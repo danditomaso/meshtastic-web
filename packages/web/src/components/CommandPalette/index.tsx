@@ -1,4 +1,4 @@
-import { Avatar } from "@components/UI/Avatar.tsx";
+import { MeshAvatar } from "@components/MeshAvatar.tsx";
 import {
   CommandDialog,
   CommandEmpty,
@@ -7,14 +7,12 @@ import {
   CommandItem,
   CommandList,
 } from "@components/UI/Command.tsx";
-import { usePinnedItems } from "@core/hooks/usePinnedItems.ts";
 import {
   useAppStore,
   useDevice,
   useDeviceStore,
   useNodeDB,
 } from "@core/stores";
-import { cn } from "@core/utils/cn.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useCommandState } from "cmdk";
 import {
@@ -30,7 +28,6 @@ import {
   type LucideIcon,
   MapIcon,
   MessageSquareIcon,
-  Pin,
   PlusIcon,
   PowerIcon,
   QrCodeIcon,
@@ -72,9 +69,6 @@ export const CommandPalette = () => {
   const { getDevices } = useDeviceStore();
   const { setDialogOpen, connection } = useDevice();
   const { getNode, removeAllNodeErrors, removeAllNodes } = useNodeDB();
-  const { pinnedItems, togglePinnedItem } = usePinnedItems({
-    storageName: "pinnedCommandMenuGroups",
-  });
   const { t } = useTranslation("commandPalette");
   const navigate = useNavigate({ from: "/" });
 
@@ -135,7 +129,7 @@ export const CommandPalette = () => {
               getNode(device.hardware.myNodeNum)?.user?.longName ??
               t("unknown.shortName"),
             icon: (
-              <Avatar
+              <MeshAvatar
                 text={
                   getNode(device.hardware.myNodeNum)?.user?.shortName ??
                   t("unknown.shortName")
@@ -261,12 +255,6 @@ export const CommandPalette = () => {
     },
   ];
 
-  const sortedGroups = [...groups].sort((a, b) => {
-    const aPinned = pinnedItems.includes(a.id) ? 1 : 0;
-    const bPinned = pinnedItems.includes(b.id) ? 1 : 0;
-    return bPinned - aPinned;
-  });
-
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -287,33 +275,12 @@ export const CommandPalette = () => {
       <CommandInput placeholder={t("search.commandPalette")} />
       <CommandList>
         <CommandEmpty>{t("emptyState")}</CommandEmpty>
-        {sortedGroups.map((group) => (
+        {groups.map((group) => (
           <CommandGroup
             key={group.label}
             heading={
               <div className="flex items-center justify-between">
                 <span>{group.label}</span>
-                <button
-                  type="button"
-                  onClick={() => togglePinnedItem(group.id)}
-                  className={cn(
-                    "transition-all duration-300 scale-100 cursor-pointer p-2 focus:*:data-label:opacity-100",
-                  )}
-                >
-                  <span
-                    data-label
-                    className="transition-all block absolute w-full mb-auto mt-auto ml-0 mr-0 text-xs left-0 -top-5 opacity-0 rounded-lg"
-                  />
-                  <Pin
-                    size={16}
-                    className={cn(
-                      "transition-opacity",
-                      pinnedItems.includes(group.id)
-                        ? "opacity-100 text-red-500"
-                        : "opacity-40 hover:opacity-70",
-                    )}
-                  />
-                </button>
               </div>
             }
           >

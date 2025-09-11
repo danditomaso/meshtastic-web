@@ -1,7 +1,6 @@
-import { Avatar } from "@components/UI/Avatar.tsx";
+import { MeshAvatar } from "@components/MeshAvatar.tsx";
 import {
   Tooltip,
-  TooltipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -36,7 +35,7 @@ const StatusTooltip = ({
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent className="bg-slate-800 dark:bg-slate-600 text-white px-4 py-1 rounded text-xs">
         {statusInfo.displayText}
-        <TooltipArrow className="fill-slate-800" />
+        {/* <TooltipArrow className="fill-slate-800" /> */}
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>
@@ -157,8 +156,7 @@ export const MessageItem = ({ message }: MessageItemProps) => {
   return (
     <li className={messageItemWrapperClass}>
       <div className="grid grid-cols-[auto_1fr] gap-x-2">
-        <Avatar
-          size="sm"
+        <MeshAvatar
           text={shortName}
           className="pt-0.5"
           showFavorite={isFavorite}

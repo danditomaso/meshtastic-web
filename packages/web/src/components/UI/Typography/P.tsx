@@ -6,5 +6,7 @@ export interface PProps {
 }
 
 export const P = ({ children, className }: PProps) => (
-  <p className={cn("leading-7 not-first:mt-6", className)}>{children}</p>
+  <p className={cn("leading-7 [&:not(:first-child)]:mt-6", className)}>
+    {children}
+  </p>
 );

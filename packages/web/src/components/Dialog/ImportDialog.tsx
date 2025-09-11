@@ -1,5 +1,4 @@
-import { create, fromBinary } from "@bufbuild/protobuf";
-import { Button } from "@components/UI/Button.tsx";
+import { Button } from "@app/components/UI/Button";
 import {
   Dialog,
   DialogClose,
@@ -8,8 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
-import { Input } from "@components/UI/Input.tsx";
+} from "@app/components/UI/Dialog";
+import { Input } from "@app/components/UI/Input";
+import { create, fromBinary } from "@bufbuild/protobuf";
 import { Label } from "@components/UI/Label.tsx";
 import {
   Select,

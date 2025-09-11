@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./UI/DropdownMenu.tsx";
-import { Subtle } from "./UI/Typography/Subtle.tsx";
+import { P } from "./UI/Typography/P.tsx";
 
 interface LanguageSwitcherProps {
   disableHover?: boolean;
@@ -38,35 +38,24 @@ export default function LanguageSwitcher({
           className={cn(
             "group flex items-center justify-start",
             "transition-colors duration-150 gap-2.5 p-1.5 rounded-md",
-            !disableHover && "hover:bg-gray-100 dark:hover:bg-gray-700",
           )}
         >
           <Languages
             size={16}
             className={cn(
-              "text-gray-500 dark:text-gray-400 w-4 flex-shrink-0 transition-colors duration-150",
-              !disableHover &&
-                "group-hover:text-gray-700 dark:group-hover:text-gray-200",
+              "flex w-4 flex-shrink-0 transition-colors duration-150",
             )}
           />
-          <Subtle
-            className={cn(
-              "text-sm text-gray-600 dark:text-gray-100 transition-colors duration-150",
-              !disableHover &&
-                "group-hover:text-gray-800 dark:group-hover:text-gray-100",
-            )}
-          >
+          <p className={cn("text-sm transition-colors duration-150")}>
             {`${i18n.t("language.changeLanguage")}:`}
-          </Subtle>
-          <Subtle
+          </p>
+          <p
             className={cn(
-              "text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-150",
-              !disableHover &&
-                "group-hover:text-gray-900 dark:group-hover:text-white",
+              "text-sm font-medium  transition-colors duration-150",
             )}
           >
             {currentLanguage?.name}
-          </Subtle>
+          </p>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-48">

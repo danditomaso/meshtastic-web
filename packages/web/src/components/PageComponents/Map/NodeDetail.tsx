@@ -1,7 +1,7 @@
 import BatteryStatus from "@components/BatteryStatus.tsx";
 import { Mono } from "@components/generic/Mono.tsx";
 import { TimeAgo } from "@components/generic/TimeAgo.tsx";
-import { Avatar } from "@components/UI/Avatar.tsx";
+import { MeshAvatar } from "@components/MeshAvatar.tsx";
 import { Separator } from "@components/UI/Separator.tsx";
 import { Heading } from "@components/UI/Typography/Heading.tsx";
 import { Subtle } from "@components/UI/Typography/Subtle.tsx";
@@ -52,7 +52,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
     <div className="p-1 text-slate-900">
       <div className="flex gap-2">
         <div className="flex flex-col items-center gap-2 min-w-6 pt-1">
-          <Avatar text={shortName} size="sm" />
+          <MeshAvatar text={shortName} />
 
           <div
             onFocusCapture={(e) => {
@@ -87,7 +87,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
                 </TooltipTrigger>
                 <TooltipPortal>
                   <TooltipContent
-                    className="rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white shadow-md animate-in fade-in-0 zoom-in-95"
+                    className="rounded-md  px-3 py-1.5 text-sm  shadow-md animate-in fade-in-0 zoom-in-95"
                     side="top"
                     align="center"
                     sideOffset={5}
@@ -113,7 +113,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
         </div>
 
         <div>
-          <Heading as="h5">{name}</Heading>
+          <Heading as="h4">{name}</Heading>
           {hardwareType !== t("unset") && <Subtle>{hardwareType}</Subtle>}
 
           {!!node.deviceMetrics?.batteryLevel && (
@@ -140,9 +140,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
               )}
             </div>
             {node.viaMqtt && (
-              <div style={{ color: "#660066" }} className="font-medium">
-                {t("nodeDetail.status.mqtt")}
-              </div>
+              <div className="font-medium">{t("nodeDetail.status.mqtt")}</div>
             )}
           </div>
         </div>
@@ -152,7 +150,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
 
       <div className="flex mt-2 text-sm">
         <div className="flex items-center grow">
-          <div className="border-2 border-slate-900 rounded-sm px-0.5 mr-1">
+          <div className="border-2 rounded-sm px-0.5 mr-1">
             {Number.isNaN(node.hopsAway)
               ? t("unit.hopsAway.unknown")
               : node.hopsAway}
@@ -190,9 +188,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
         {!!node.deviceMetrics?.airUtilTx && (
           <div className="grow">
             <div>{t("nodeDetail.airTxUtilization")}</div>
-            <Mono className="text-gray-500">
-              {node.deviceMetrics?.airUtilTx.toPrecision(3)}%
-            </Mono>
+            <Mono>{node.deviceMetrics?.airUtilTx.toPrecision(3)}%</Mono>
           </div>
         )}
       </div>
@@ -200,7 +196,7 @@ export const NodeDetail = ({ node }: NodeDetailProps) => {
       {node.snr !== 0 && (
         <div className="mt-2">
           <div>{t("unit.snr")}</div>
-          <Mono className="flex items-center text-xs text-gray-500">
+          <Mono className="flex items-center text-xs">
             {node.snr}
             {t("unit.dbm")}
             <Dot />

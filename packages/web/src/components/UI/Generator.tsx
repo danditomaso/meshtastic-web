@@ -1,5 +1,5 @@
-import { Button, type ButtonVariant } from "@components/UI/Button.tsx";
-import { Input } from "@components/UI/Input.tsx";
+import { Button, type ButtonVariant } from "@app/components/UI/Button";
+import { Input } from "@app/components/UI/Input";
 import {
   Select,
   SelectContent,

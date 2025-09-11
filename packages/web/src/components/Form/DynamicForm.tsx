@@ -1,10 +1,10 @@
+import { Button } from "@app/components/UI/Button";
 import { createZodResolver } from "@components/Form/createZodResolver.ts";
 import {
   DynamicFormField,
   type FieldProps,
 } from "@components/Form/DynamicFormField.tsx";
 import { FieldWrapper } from "@components/Form/FormWrapper.tsx";
-import { Button } from "@components/UI/Button.tsx";
 import { Heading } from "@components/UI/Typography/Heading.tsx";
 import { Subtle } from "@components/UI/Typography/Subtle.tsx";
 import { useEffect } from "react";

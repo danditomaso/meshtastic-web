@@ -1,8 +1,8 @@
+import { Button } from "@app/components/UI/Button";
+import { Heading } from "@app/components/UI/Typography/Heading";
+import { P } from "@app/components/UI/Typography/P";
 import LanguageSwitcher from "@components/LanguageSwitcher.tsx";
-import { Button } from "@components/UI/Button.tsx";
 import { Separator } from "@components/UI/Separator.tsx";
-import { Heading } from "@components/UI/Typography/Heading.tsx";
-import { Subtle } from "@components/UI/Typography/Subtle.tsx";
 import { useAppStore, useDeviceStore, useNodeDBStore } from "@core/stores";
 import { ListPlusIcon, PlusIcon, UsersIcon } from "lucide-react";
 import { useMemo } from "react";
@@ -21,7 +21,7 @@ export const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <Heading as="h3">{t("dashboard.title")}</Heading>
-          <Subtle>{t("dashboard.description")}</Subtle>
+          <P>{t("dashboard.description")}</P>
         </div>
         <LanguageSwitcher />
       </div>
@@ -71,9 +71,9 @@ export const Dashboard = () => {
           </ul>
         ) : (
           <div className="m-auto flex flex-col gap-3 text-center">
-            <ListPlusIcon size={48} className="mx-auto text-text-secondary" />
+            <ListPlusIcon size={48} className="mx-auto" />
             <Heading as="h3">{t("dashboard.noDevicesTitle")}</Heading>
-            <Subtle>{t("dashboard.noDevicesDescription")}</Subtle>
+            <p>{t("dashboard.noDevicesDescription")}</p>
             <Button
               className="gap-2"
               variant="default"

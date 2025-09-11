@@ -1,4 +1,3 @@
-import { create, toBinary } from "@bufbuild/protobuf";
 import {
   Dialog,
   DialogClose,
@@ -7,8 +6,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@components/UI/Dialog.tsx";
-import { Input } from "@components/UI/Input.tsx";
+} from "@app/components/UI/Dialog.tsx";
+import { Input } from "@app/components/UI/Input.tsx";
+import { create, toBinary } from "@bufbuild/protobuf";
 import { Label } from "@components/UI/Label.tsx";
 import { Protobuf, type Types } from "@meshtastic/core";
 import { fromByteArray } from "base64-js";

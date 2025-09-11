@@ -1,10 +1,10 @@
+import { Input } from "@app/components/UI/Input";
 import { messagesWithParamsRoute } from "@app/routes.tsx";
+import { MeshAvatar } from "@components/MeshAvatar.tsx";
 import { ChannelChat } from "@components/PageComponents/Messages/ChannelChat.tsx";
 import { MessageInput } from "@components/PageComponents/Messages/MessageInput.tsx";
 import { PageLayout } from "@components/PageLayout.tsx";
 import { Sidebar } from "@components/Sidebar.tsx";
-import { Avatar } from "@components/UI/Avatar.tsx";
-import { Input } from "@components/UI/Input.tsx";
 import { SidebarButton } from "@components/UI/Sidebar/SidebarButton.tsx";
 import { SidebarSection } from "@components/UI/Sidebar/SidebarSection.tsx";
 import { useToast } from "@core/hooks/useToast.ts";
@@ -282,7 +282,7 @@ export const MessagesPage = () => {
                 resetUnread(node.num);
               }}
             >
-              <Avatar
+              <MeshAvatar
                 text={node.user?.shortName ?? t("unknown.shortName")}
                 className={cn(hasNodeError(node.num) && "text-red-500")}
                 showError={hasNodeError(node.num)}
@@ -346,7 +346,7 @@ export const MessagesPage = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         {renderChatContent()}
 
-        <div className="flex-none dark:bg-slate-900 p-2">
+        <div className="flex-none  p-2">
           {isBroadcast || isDirect ? (
             <MessageInput
               to={isDirect ? numericChatId : MessageType.Broadcast}
