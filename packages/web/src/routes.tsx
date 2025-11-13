@@ -1,4 +1,6 @@
 import { DialogManager } from "@components/Dialog/DialogManager.tsx";
+import { getMeshtasticContext } from "@core/context/meshtastic";
+import type { RouterContext } from "@core/context/types";
 import type { useAppStore, useMessageStore } from "@core/stores";
 import { Connections } from "@pages/Connections/index.tsx";
 import MapPage from "@pages/Map/index.tsx";
@@ -15,7 +17,7 @@ import type { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import { App } from "./App.tsx";
 
-interface AppContext {
+interface AppContext extends RouterContext {
   stores: {
     app: ReturnType<typeof useAppStore>;
     message: ReturnType<typeof useMessageStore>;
@@ -57,6 +59,14 @@ export const messagesWithParamsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/messages/$type/$chatId",
   component: MessagesPage,
+  loader: ({ context }) => {
+    // Return empty if messages client not available
+    if (!context.messages) {
+      return { messages: [] };
+    }
+    // Note: This loader doesn't use route params, consider removing if not needed
+    return { messages: [] };
+  },
   parseParams: (params) => ({
     type: z
       .enum(["direct", "broadcast"])
@@ -172,6 +182,16 @@ const routeTree = rootRoute.addChildren([
 const router = createRouter({
   routeTree,
   context: {
+    get messages() {
+      return getMeshtasticContext().messages;
+    },
+    get events() {
+      return getMeshtasticContext().events;
+    },
+    get client() {
+      return getMeshtasticContext().client;
+    },
+    // Existing context
     stores: {
       app: {} as ReturnType<typeof useAppStore>,
       message: {} as ReturnType<typeof useMessageStore>,
@@ -179,4 +199,11 @@ const router = createRouter({
     i18n: {} as ReturnType<typeof import("react-i18next").useTranslation>,
   },
 });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 export { router };

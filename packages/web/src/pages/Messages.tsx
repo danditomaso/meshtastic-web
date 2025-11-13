@@ -8,16 +8,8 @@ import { Input } from "@components/UI/Input.tsx";
 import { SidebarButton } from "@components/UI/Sidebar/SidebarButton.tsx";
 import { SidebarSection } from "@components/UI/Sidebar/SidebarSection.tsx";
 import { useToast } from "@core/hooks/useToast.ts";
-import {
-  MessageState,
-  MessageType,
-  useDevice,
-  useMessages,
-  useNodeDB,
-  useSidebar,
-} from "@core/stores";
+import { MessageType, useDevice, useNodeDB, useSidebar } from "@core/stores";
 import { cn } from "@core/utils/cn.ts";
-import { randId } from "@core/utils/randId.ts";
 import { Protobuf, Types } from "@meshtastic/core";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { HashIcon, LockIcon, LockOpenIcon } from "lucide-react";
@@ -43,10 +35,12 @@ function SelectMessageChat() {
 }
 
 export const MessagesPage = () => {
-  const { channels, getUnreadCount, resetUnread, connection } = useDevice();
+  const { channels, getUnreadCount, resetUnread } = useDevice();
   const { getNodes, getNode, getMyNode, hasNodeError } = useNodeDB();
 
-  const { getMessages, setMessageState } = useMessages();
+  // ✨ Use SDK from context (fully typed!)
+  const { messages, events, client } =
+    messagesWithParamsRoute.useRouteContext();
 
   const { type, chatId } = useParams({ from: messagesWithParamsRoute.id });
 
@@ -114,90 +108,92 @@ export const MessagesPage = () => {
       });
   }, [deferredSearch, getNodes, getUnreadCount]);
 
-  const sendText = useCallback(
+  const handleSendMessage = useCallback(
     async (message: string) => {
-      const toValue = isDirect ? numericChatId : MessageType.Broadcast;
-      const channelValue = isDirect
-        ? Types.ChannelNumber.Primary
-        : numericChatId;
-
-      let messageId: number | undefined;
+      // console.log("[Messages] Send attempt - messages:", !!messages, "initialized:", client.initialized, "myNodeNum:", client.myNodeNum);
+      // if (!messages || !client.initialized) {
+      //   console.warn("[Messages] Cannot send - not connected");
+      //   toast({
+      //     title: t("toast.messages.notConnected", {
+      //       defaultValue: "Please connect a device first",
+      //     }),
+      //   });
+      //   return;
+      // }
 
       try {
-        messageId = await connection?.sendText(
-          message,
-          toValue,
-          true,
-          channelValue,
-        );
-        if (messageId !== undefined) {
-          if (chatType === MessageType.Broadcast) {
-            setMessageState({
-              type: MessageType.Broadcast,
-              channelId: channelValue,
-              messageId,
-              newState: MessageState.Ack,
-            });
-          } else {
-            setMessageState({
-              type: MessageType.Direct,
-              nodeA: getMyNode().num,
-              nodeB: numericChatId,
-              messageId,
-              newState: MessageState.Ack,
-            });
-          }
-        } else {
-          console.warn("sendText completed but messageId is undefined");
-        }
+        await messages.sendText({
+          text: message,
+          to: isDirect ? numericChatId : "broadcast",
+          channel: isDirect ? Types.ChannelNumber.Primary : numericChatId,
+          wantAck: true,
+        });
       } catch (e: unknown) {
         console.error("Failed to send message:", e);
-        const failedId = messageId ?? randId();
-        if (chatType === MessageType.Broadcast) {
-          setMessageState({
-            type: MessageType.Broadcast,
-            channelId: channelValue,
-            messageId: failedId,
-            newState: MessageState.Failed,
-          });
-        } else {
-          setMessageState({
-            type: MessageType.Direct,
-            nodeA: getMyNode().num,
-            nodeB: numericChatId,
-            messageId: failedId,
-            newState: MessageState.Failed,
-          });
-        }
+        toast({
+          title: t("toast.messages.sendFailed", {
+            defaultValue: "Failed to send message",
+          }),
+        });
       }
     },
-    [numericChatId, chatType, connection, getMyNode, setMessageState, isDirect],
+    [messages, isDirect, numericChatId, toast, t],
   );
 
-  const renderChatContent = () => {
-    switch (chatType) {
-      case MessageType.Broadcast:
-        return (
-          <ChannelChat
-            messages={getMessages({
-              type: MessageType.Broadcast,
-              channelId: numericChatId,
-            }).reverse()}
-          />
-        );
-      case MessageType.Direct:
-        return (
-          <ChannelChat
-            messages={getMessages({
-              type: MessageType.Direct,
-              nodeA: getMyNode().num,
-              nodeB: numericChatId,
-            }).reverse()}
-          />
-        );
-      default:
-        return <SelectMessageChat />;
+  // ✨ Get messages from SDK
+  const chatMessages = useMemo(() => {
+    // Return empty array if messages client not initialized yet
+    if (!messages) {
+      return [];
     }
+
+    if (chatType === MessageType.Broadcast) {
+      return messages.getMessages({
+        type: "broadcast",
+        channelId: numericChatId,
+      });
+    } else if (chatType === MessageType.Direct) {
+      return messages.getMessages({
+        type: "direct",
+        nodeA: client.myNodeNum,
+        nodeB: numericChatId,
+      });
+    }
+    return [];
+  }, [chatType, messages, numericChatId, client.myNodeNum]);
+
+  // ✨ Subscribe to new messages for live updates
+  const [liveMessages, setLiveMessages] = useState(chatMessages);
+
+  useEffect(() => {
+    setLiveMessages(chatMessages);
+  }, [chatMessages]);
+
+  useEffect(() => {
+    const unsubscribe = events.onMessageReceived.subscribe((event) => {
+      // Update messages if it's for the current chat
+      const msg = event.message;
+      if (
+        chatType === MessageType.Broadcast &&
+        msg.type === "broadcast" &&
+        msg.channel === numericChatId
+      ) {
+        setLiveMessages((prev) => [...prev, msg]);
+      } else if (chatType === MessageType.Direct && msg.type === "direct") {
+        if (msg.from === numericChatId || msg.to === numericChatId) {
+          setLiveMessages((prev) => [...prev, msg]);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [events, chatType, numericChatId]);
+
+  const renderChatContent = () => {
+    if (chatType === MessageType.Broadcast || chatType === MessageType.Direct) {
+      return <ChannelChat messages={[...liveMessages].reverse()} />;
+    }
+    return <SelectMessageChat />;
   };
 
   const leftSidebar = useMemo(
@@ -339,7 +335,7 @@ export const MessagesPage = () => {
           {isBroadcast || isDirect ? (
             <MessageInput
               to={isDirect ? numericChatId : MessageType.Broadcast}
-              onSend={sendText}
+              onSend={handleSendMessage}
               maxBytes={200}
             />
           ) : (

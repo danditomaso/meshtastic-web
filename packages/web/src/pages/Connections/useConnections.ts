@@ -8,6 +8,7 @@ import {
   createConnectionFromInput,
   testHttpReachable,
 } from "@app/pages/Connections/utils";
+import { connectMeshtasticDevice } from "@core/context";
 import {
   useAppStore,
   useDeviceStore,
@@ -28,7 +29,7 @@ const heartbeats = new Map<ConnectionId, ReturnType<typeof setInterval>>();
 const configSubscriptions = new Map<ConnectionId, () => void>();
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-const CONFIG_HEARTBEAT_INTERVAL_MS = 5000; // 5s during configuration
+const CONFIG_HEARTBEAT_INTERVAL_MS = 50000; // 5m during configuration
 
 export function useConnections() {
   const connections = useDeviceStore((s) => s.savedConnections);
@@ -183,6 +184,29 @@ export function useConnections() {
           );
           device.setConnectionPhase("configured");
           updateStatus(id, "configured");
+
+          // Initialize SDK with device connection
+          const myNode = nodeDB.getMyNode();
+          console.log("[useConnections] onConfigComplete - myNode:", myNode);
+          if (myNode) {
+            console.log(
+              `[useConnections] Initializing SDK with myNodeNum: ${myNode.num}`,
+            );
+            connectMeshtasticDevice(meshDevice, myNode.num)
+              .then(() => {
+                console.log("[useConnections] SDK initialized successfully");
+              })
+              .catch((err) => {
+                console.error(
+                  "[useConnections] Failed to initialize SDK:",
+                  err,
+                );
+              });
+          } else {
+            console.warn(
+              "[useConnections] Cannot initialize SDK - myNode is null",
+            );
+          }
 
           // Switch from fast config heartbeat to slow maintenance heartbeat
           const oldHeartbeat = heartbeats.get(id);

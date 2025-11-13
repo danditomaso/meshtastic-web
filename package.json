@@ -48,6 +48,9 @@
       "core-js",
       "esbuild",
       "simple-git-hooks"
+    ],
+    "ignoredBuiltDependencies": [
+      "@meshtastic/core"
     ]
   }
 }
