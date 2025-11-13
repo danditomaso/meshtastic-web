@@ -188,6 +188,24 @@ export class EventBus {
     new SimpleEventDispatcher<ConnectionEvent>();
 
   /**
+   * Fires when a device is connected to the client
+   *
+   * @event onDeviceConnected
+   */
+  public readonly onDeviceConnected = new SimpleEventDispatcher<{
+    deviceId: number;
+  }>();
+
+  /**
+   * Fires when a device is disconnected from the client
+   *
+   * @event onDeviceDisconnected
+   */
+  public readonly onDeviceDisconnected = new SimpleEventDispatcher<{
+    deviceId: number;
+  }>();
+
+  /**
    * Fires when there's an error in the SDK
    *
    * @event onError
@@ -220,6 +238,8 @@ export class EventBus {
     this.onChannelUpdated.clear();
     this.onChannelRemoved.clear();
     this.onConnectionStateChanged.clear();
+    this.onDeviceConnected.clear();
+    this.onDeviceDisconnected.clear();
     this.onError.clear();
   }
 
@@ -242,6 +262,8 @@ export class EventBus {
       this.onChannelUpdated.count +
       this.onChannelRemoved.count +
       this.onConnectionStateChanged.count +
+      this.onDeviceConnected.count +
+      this.onDeviceDisconnected.count +
       this.onError.count
     );
   }

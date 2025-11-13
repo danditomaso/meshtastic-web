@@ -8,7 +8,10 @@ import {
   createConnectionFromInput,
   testHttpReachable,
 } from "@app/pages/Connections/utils";
-import { connectMeshtasticDevice } from "@core/context";
+import {
+  connectMeshtasticDevice,
+  disconnectMeshtasticDevice,
+} from "@core/context";
 import {
   useAppStore,
   useDeviceStore,
@@ -62,7 +65,7 @@ export function useConnections() {
   );
 
   const removeConnection = useCallback(
-    (id: ConnectionId) => {
+    async (id: ConnectionId) => {
       const conn = connections.find((c) => c.id === id);
 
       // Stop heartbeat
@@ -89,6 +92,16 @@ export function useConnections() {
         const device = getDevice(conn.meshDeviceId);
 
         if (device?.connection) {
+          // Disconnect MeshDevice from SDK
+          try {
+            await disconnectMeshtasticDevice();
+          } catch (err) {
+            console.error(
+              "[useConnections] Failed to disconnect SDK device:",
+              err,
+            );
+          }
+
           // Disconnect MeshDevice
           try {
             device.connection.disconnect();
@@ -192,7 +205,7 @@ export function useConnections() {
             console.log(
               `[useConnections] Initializing SDK with myNodeNum: ${myNode.num}`,
             );
-            connectMeshtasticDevice(meshDevice, myNode.num)
+            connectMeshtasticDevice(meshDevice, deviceId, myNode.num)
               .then(() => {
                 console.log("[useConnections] SDK initialized successfully");
               })
@@ -471,6 +484,16 @@ export function useConnections() {
           const device = getDevice(conn.meshDeviceId);
 
           if (device?.connection) {
+            // Disconnect MeshDevice from SDK
+            try {
+              await disconnectMeshtasticDevice();
+            } catch (err) {
+              console.error(
+                "[useConnections] Failed to disconnect SDK device:",
+                err,
+              );
+            }
+
             // Disconnect MeshDevice
             try {
               device.connection.disconnect();

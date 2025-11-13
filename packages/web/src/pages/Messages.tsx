@@ -110,16 +110,15 @@ export const MessagesPage = () => {
 
   const handleSendMessage = useCallback(
     async (message: string) => {
-      // console.log("[Messages] Send attempt - messages:", !!messages, "initialized:", client.initialized, "myNodeNum:", client.myNodeNum);
-      // if (!messages || !client.initialized) {
-      //   console.warn("[Messages] Cannot send - not connected");
-      //   toast({
-      //     title: t("toast.messages.notConnected", {
-      //       defaultValue: "Please connect a device first",
-      //     }),
-      //   });
-      //   return;
-      // }
+      if (!messages) {
+        console.warn("[Messages] Cannot send - no device connected");
+        toast({
+          title: t("toast.messages.notConnected", {
+            defaultValue: "Please connect a device first",
+          }),
+        });
+        return;
+      }
 
       try {
         await messages.sendText({
@@ -153,6 +152,10 @@ export const MessagesPage = () => {
         channelId: numericChatId,
       });
     } else if (chatType === MessageType.Direct) {
+      // Need myNodeNum for direct messages
+      if (client.myNodeNum === undefined) {
+        return [];
+      }
       return messages.getMessages({
         type: "direct",
         nodeA: client.myNodeNum,

@@ -48,6 +48,20 @@ export class MessagingClient {
   async sendText(params: SendTextParams): Promise<number | undefined> {
     const { text, to, channel = 0, wantAck = true, replyId, emoji } = params;
 
+    // Guard: Device must be available
+    if (!this.device) {
+      console.warn("[MessagingClient] Cannot send message: device not connected");
+
+      // Emit error event
+      this.eventBus?.onError.dispatch({
+        error: new Error("Device not connected"),
+        context: "MessagingClient.sendText",
+        deviceId: this.deviceId,
+      });
+
+      return undefined;
+    }
+
     try {
       const messageId = await this.device.sendText(
         text,

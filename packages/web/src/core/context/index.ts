@@ -9,12 +9,18 @@ export {
   cleanupMeshtastic,
   connectMeshtasticDevice,
   createMeshtasticClient,
-  getMeshtastic,
+  disconnectMeshtasticDevice,
   getMeshtasticContext,
-  initializeMeshtastic,
-  isMeshtasticReady,
+  isMeshtasticDeviceConnected,
   setMeshtastic,
 } from "./meshtastic.ts";
+
+export {
+  notifyDeviceConnected,
+  notifyDeviceDisconnected,
+  notifyNoDeviceForMessaging,
+  setupSDKNotifications,
+} from "./notifications.ts";
 export type {
   EventBus,
   MeshtasticClient,

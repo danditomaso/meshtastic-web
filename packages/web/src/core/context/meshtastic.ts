@@ -1,6 +1,12 @@
 import { MeshtasticClient } from "@meshtastic/client-sdk";
+import {
+  notifyDeviceConnected,
+  notifyDeviceDisconnected,
+  setupSDKNotifications,
+} from "./notifications";
 
 let meshtasticClient: MeshtasticClient | null = null;
+let notificationCleanup: (() => void) | null = null;
 
 /**
  * Create the Meshtastic client (without device - for router context)
@@ -24,8 +30,16 @@ export function createMeshtasticClient(options?: {
     console.log("📩 New message:", event.message);
   });
 
-  meshtasticClient.events.onError.subscribe((event) => {
-    console.error("❌ Meshtastic error:", event.error);
+  // Set up user notifications for SDK errors
+  notificationCleanup = setupSDKNotifications(meshtasticClient);
+
+  // Set up device connection/disconnection notifications
+  meshtasticClient.events.onDeviceConnected.subscribe((event) => {
+    notifyDeviceConnected(event.deviceId);
+  });
+
+  meshtasticClient.events.onDeviceDisconnected.subscribe(() => {
+    notifyDeviceDisconnected();
   });
 
   return meshtasticClient;
@@ -58,9 +72,53 @@ export function getMeshtasticContext(): import("./types").RouterContext {
 }
 
 /**
+ * Connect a MeshDevice to the global Meshtastic client
+ * This initializes the MessageClient and subscribes to device events
+ */
+export async function connectMeshtasticDevice(
+  device: import("@meshtastic/core").MeshDevice,
+  deviceId: number,
+  myNodeNum: number,
+): Promise<void> {
+  // Ensure client exists
+  if (!meshtasticClient) {
+    createMeshtasticClient();
+  }
+
+  // Connect the device to the client
+  await meshtasticClient!.connectDevice(device, deviceId, myNodeNum);
+
+  console.log(
+    `[Meshtastic Context] Device ${deviceId} connected successfully`,
+  );
+}
+
+/**
+ * Disconnect the current device from the global Meshtastic client
+ */
+export async function disconnectMeshtasticDevice(): Promise<void> {
+  if (meshtasticClient) {
+    await meshtasticClient.disconnectDevice();
+    console.log("[Meshtastic Context] Device disconnected");
+  }
+}
+
+/**
+ * Check if a device is currently connected
+ */
+export function isMeshtasticDeviceConnected(): boolean {
+  return meshtasticClient?.isDeviceConnected() ?? false;
+}
+
+/**
  * Cleanup Meshtastic client
  */
 export async function cleanupMeshtastic(): Promise<void> {
+  if (notificationCleanup) {
+    notificationCleanup();
+    notificationCleanup = null;
+  }
+
   if (meshtasticClient) {
     await meshtasticClient.shutdown();
     meshtasticClient = null;

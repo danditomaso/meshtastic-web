@@ -10,16 +10,16 @@ import { EventBus } from "../events/EventBus.ts";
 // import { WaypointClient } from "../waypoints/WaypointClient";
 
 export interface MeshtasticClientConfig {
-  device: MeshDevice;
-  deviceId: number;
-  myNodeNum: number;
+  device?: MeshDevice;
+  deviceId?: number;
+  myNodeNum?: number;
   enablePersistence?: boolean;
   storageKey?: string;
   messageRetentionLimit?: number;
 }
 
 export class MeshtasticClient {
-  public readonly messages: MessagingClient;
+  public messages?: MessagingClient;
   public readonly events: EventBus;
   // public readonly nodes: NodeClient;
   // public readonly channels: ChannelClient;
@@ -27,17 +27,17 @@ export class MeshtasticClient {
   // public readonly telemetry: TelemetryClient;
   // public readonly waypoints: WaypointClient;
 
-  private device: MeshDevice;
-  private deviceId: number;
-  private myNodeNum: number;
+  private device?: MeshDevice;
+  private _deviceId?: number;
+  private _myNodeNum?: number;
   private messageStoreManager: MessageStoreManager;
 
   constructor(config: MeshtasticClientConfig) {
     this.device = config.device;
-    this.deviceId = config.deviceId;
-    this.myNodeNum = config.myNodeNum;
+    this._deviceId = config.deviceId;
+    this._myNodeNum = config.myNodeNum;
 
-    // Initialize EventBus
+    // Initialize EventBus (always available)
     this.events = new EventBus();
 
     // Initialize message store manager with persistence
@@ -48,15 +48,17 @@ export class MeshtasticClient {
       storeRetentionLimit: 10,
     });
 
-    // Initialize messaging client with EventBus
-    this.messages = new MessagingClient({
-      device: this.device,
-      deviceId: this.deviceId,
-      myNodeNum: this.myNodeNum,
-      storeManager: this.messageStoreManager,
-      eventBus: this.events,
-      pipeline: new MessagePipeline(),
-    });
+    // Only initialize messaging client if device is provided
+    if (this.device && this._deviceId !== undefined && this._myNodeNum !== undefined) {
+      this.messages = new MessagingClient({
+        device: this.device,
+        deviceId: this._deviceId,
+        myNodeNum: this._myNodeNum,
+        storeManager: this.messageStoreManager,
+        eventBus: this.events,
+        pipeline: new MessagePipeline(),
+      });
+    }
 
     // TODO: Initialize other clients when ready
     // this.nodes = new NodeClient({ ... });
@@ -64,6 +66,86 @@ export class MeshtasticClient {
     // this.config = new ConfigClient({ ... });
     // this.telemetry = new TelemetryClient({ ... });
     // this.waypoints = new WaypointClient({ ... });
+  }
+
+  /**
+   * Check if a device is currently connected
+   */
+  isDeviceConnected(): boolean {
+    return this.device !== undefined;
+  }
+
+  /**
+   * Get the current device's myNodeNum (undefined if no device connected)
+   */
+  get myNodeNum(): number | undefined {
+    return this._myNodeNum;
+  }
+
+  /**
+   * Get the current device ID (undefined if no device connected)
+   */
+  get deviceId(): number | undefined {
+    return this._deviceId;
+  }
+
+  /**
+   * Connect a MeshDevice to this client
+   * Creates MessageClient and subscribes to device events
+   */
+  async connectDevice(device: MeshDevice, deviceId: number, myNodeNum: number): Promise<void> {
+    if (this.device) {
+      throw new Error("Device already connected. Disconnect first.");
+    }
+
+    this.device = device;
+    this._deviceId = deviceId;
+    this._myNodeNum = myNodeNum;
+
+    // Initialize messaging client
+    this.messages = new MessagingClient({
+      device: this.device,
+      deviceId: this._deviceId,
+      myNodeNum: this._myNodeNum,
+      storeManager: this.messageStoreManager,
+      eventBus: this.events,
+      pipeline: new MessagePipeline(),
+    });
+
+    // Subscribe to device events
+    this.subscribeToDeviceEvents();
+
+    // Emit device connected event
+    this.events.onDeviceConnected.dispatch({ deviceId });
+  }
+
+  /**
+   * Disconnect the current device
+   * Removes MessageClient and unsubscribes from events
+   */
+  async disconnectDevice(): Promise<void> {
+    if (!this.device) {
+      return; // Already disconnected
+    }
+
+    const deviceId = this._deviceId;
+
+    // Force save any pending changes
+    await this.messageStoreManager.forceSave();
+
+    // Unsubscribe from device events
+    this.unsubscribeFromDeviceEvents();
+
+    // Clear device references
+    this.device = undefined;
+    this._deviceId = undefined;
+    this._myNodeNum = undefined;
+    this.messages = undefined;
+
+    // Emit device disconnected event
+    if (deviceId !== undefined) {
+      this.events.onDeviceDisconnected.dispatch({ deviceId });
+    }
   }
 
   async connect(): Promise<void> {
