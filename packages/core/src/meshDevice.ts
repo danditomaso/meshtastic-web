@@ -29,6 +29,12 @@ export class MeshDevice {
   /** Randomly generated number to ensure confiuration lockstep */
   public configId: number;
 
+  /** Config-only stage nonce */
+  public readonly configOnlyNonce: number = 69420;
+
+  /** Node-info-only stage nonce */
+  public readonly nodeInfoNonce: number = 69421;
+
   /**
    * Packert queue, to space out transmissions and routing handle errors and
    * acks
@@ -759,7 +765,7 @@ export class MeshDevice {
   }
 
   /**
-   * Triggers the device configure process
+   * Triggers the device configure process (legacy single-stage)
    */
   public configure(): Promise<number> {
     this.log.debug(
@@ -779,6 +785,59 @@ export class MeshDevice {
       (e) => {
         if (this.deviceStatus === DeviceStatusEnum.DeviceDisconnected) {
           throw new Error("Device connection lost");
+        }
+        throw e;
+      },
+    );
+  }
+
+  /**
+   * Stage 1: Request config-only (device config, module config, channels)
+   */
+  public configureConfigOnly(): Promise<number> {
+    this.log.debug(
+      Emitter[Emitter.Configure],
+      "⚙️ [Stage 1] Requesting config-only with nonce " + this.configOnlyNonce,
+    );
+    this.updateDeviceStatus(DeviceStatusEnum.DeviceConfiguring);
+
+    const toRadio = create(Protobuf.Mesh.ToRadioSchema, {
+      payloadVariant: {
+        case: "wantConfigId",
+        value: this.configOnlyNonce,
+      },
+    });
+
+    return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio)).catch(
+      (e) => {
+        if (this.deviceStatus === DeviceStatusEnum.DeviceDisconnected) {
+          throw new Error("Device connection lost during config-only stage");
+        }
+        throw e;
+      },
+    );
+  }
+
+  /**
+   * Stage 2: Request node-info-only (node database)
+   */
+  public configureNodeInfoOnly(): Promise<number> {
+    this.log.debug(
+      Emitter[Emitter.Configure],
+      "⚙️ [Stage 2] Requesting node-info-only with nonce " + this.nodeInfoNonce,
+    );
+
+    const toRadio = create(Protobuf.Mesh.ToRadioSchema, {
+      payloadVariant: {
+        case: "wantConfigId",
+        value: this.nodeInfoNonce,
+      },
+    });
+
+    return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio)).catch(
+      (e) => {
+        if (this.deviceStatus === DeviceStatusEnum.DeviceDisconnected) {
+          throw new Error("Device connection lost during node-info stage");
         }
         throw e;
       },

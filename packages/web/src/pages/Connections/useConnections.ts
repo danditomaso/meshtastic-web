@@ -24,11 +24,9 @@ import { useCallback } from "react";
 
 // Local storage for cleanup only (not in Zustand)
 const transports = new Map<ConnectionId, BluetoothDevice | SerialPort>();
-const heartbeats = new Map<ConnectionId, ReturnType<typeof setInterval>>();
 const configSubscriptions = new Map<ConnectionId, () => void>();
 
-const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-const CONFIG_HEARTBEAT_INTERVAL_MS = 5000; // 5s during configuration
+const WANT_CONFIG_DELAY_MS = 250; // Delay between config stages (matches Android/iOS)
 
 export function useConnections() {
   const connections = useDeviceStore((s) => s.savedConnections);
@@ -63,14 +61,6 @@ export function useConnections() {
   const removeConnection = useCallback(
     (id: ConnectionId) => {
       const conn = connections.find((c) => c.id === id);
-
-      // Stop heartbeat
-      const heartbeatId = heartbeats.get(id);
-      if (heartbeatId) {
-        clearInterval(heartbeatId);
-        heartbeats.delete(id);
-        console.log(`[useConnections] Heartbeat stopped for connection ${id}`);
-      }
 
       // Unsubscribe from config complete event
       const unsubConfigComplete = configSubscriptions.get(id);
@@ -175,71 +165,66 @@ export function useConnections() {
       setActiveConnectionId(id);
       device.setConnectionId(id);
 
-      // Listen for config complete event (with nonce/ID)
+      // Listen for config complete events (two-stage flow with nonces)
       const unsubConfigComplete = meshDevice.events.onConfigComplete.subscribe(
-        (configCompleteId) => {
+        async (configCompleteId) => {
           console.log(
-            `[useConnections] Configuration complete with ID: ${configCompleteId}`,
+            `[useConnections] Received configCompleteId: ${configCompleteId}`,
           );
-          device.setConnectionPhase("configured");
-          updateStatus(id, "configured");
 
-          // Switch from fast config heartbeat to slow maintenance heartbeat
-          const oldHeartbeat = heartbeats.get(id);
-          if (oldHeartbeat) {
-            clearInterval(oldHeartbeat);
+          // Stage 1: Config-only complete (nonce 69420)
+          if (configCompleteId === meshDevice.configOnlyNonce) {
             console.log(
-              `[useConnections] Switching to maintenance heartbeat (5 min interval)`,
+              `[useConnections] Config-only stage complete (nonce ${meshDevice.configOnlyNonce})`,
             );
-          }
 
-          const maintenanceHeartbeat = setInterval(() => {
-            meshDevice.heartbeat().catch((error) => {
-              console.warn("[useConnections] Heartbeat failed:", error);
+            // Allow firmware to settle before node-info stage
+            await new Promise((resolve) =>
+              setTimeout(resolve, WANT_CONFIG_DELAY_MS),
+            );
+
+            // Start node-info stage
+            console.log(
+              `[useConnections] Starting node-info stage with nonce ${meshDevice.nodeInfoNonce}`,
+            );
+            meshDevice.configureNodeInfoOnly().catch((error) => {
+              console.error(
+                "[useConnections] Failed to start node-info stage:",
+                error,
+              );
+              updateStatus(id, "error", error.message);
             });
-          }, HEARTBEAT_INTERVAL_MS);
-          heartbeats.set(id, maintenanceHeartbeat);
+          }
+          // Stage 2: Node-info complete (nonce 69421)
+          else if (configCompleteId === meshDevice.nodeInfoNonce) {
+            console.log(
+              `[useConnections] Node-info stage complete (nonce ${meshDevice.nodeInfoNonce})`,
+            );
+            console.log(
+              "[useConnections] Two-stage configuration fully complete",
+            );
+
+            device.setConnectionPhase("configured");
+            updateStatus(id, "configured");
+          }
         },
       );
       configSubscriptions.set(id, unsubConfigComplete);
 
-      // Start configuration
+      // Start two-stage configuration (config-only stage first)
       device.setConnectionPhase("configuring");
       updateStatus(id, "configuring");
-      console.log("[useConnections] Starting configuration");
+      console.log(
+        `[useConnections] Starting two-stage configuration (config-only with nonce ${meshDevice.configOnlyNonce})`,
+      );
 
-      meshDevice
-        .configure()
-        .then(() => {
-          console.log(
-            "[useConnections] Configuration complete, starting heartbeat",
-          );
-          // Send initial heartbeat after configure completes
-          meshDevice
-            .heartbeat()
-            .then(() => {
-              // Start fast heartbeat after first successful heartbeat
-              const configHeartbeatId = setInterval(() => {
-                meshDevice.heartbeat().catch((error) => {
-                  console.warn(
-                    "[useConnections] Config heartbeat failed:",
-                    error,
-                  );
-                });
-              }, CONFIG_HEARTBEAT_INTERVAL_MS);
-              heartbeats.set(id, configHeartbeatId);
-              console.log(
-                `[useConnections] Heartbeat started for connection ${id} (5s interval during config)`,
-              );
-            })
-            .catch((error) => {
-              console.warn("[useConnections] Initial heartbeat failed:", error);
-            });
-        })
-        .catch((error) => {
-          console.error(`[useConnections] Failed to configure:`, error);
-          updateStatus(id, "error", error.message);
-        });
+      meshDevice.configureConfigOnly().catch((error) => {
+        console.error(
+          `[useConnections] Failed to start config-only stage:`,
+          error,
+        );
+        updateStatus(id, "error", error.message);
+      });
 
       updateSavedConnection(id, { meshDeviceId: deviceId });
       return deviceId;
@@ -421,16 +406,6 @@ export function useConnections() {
         return;
       }
       try {
-        // Stop heartbeat
-        const heartbeatId = heartbeats.get(id);
-        if (heartbeatId) {
-          clearInterval(heartbeatId);
-          heartbeats.delete(id);
-          console.log(
-            `[useConnections] Heartbeat stopped for connection ${id}`,
-          );
-        }
-
         // Unsubscribe from config complete event
         const unsubConfigComplete = configSubscriptions.get(id);
         if (unsubConfigComplete) {
