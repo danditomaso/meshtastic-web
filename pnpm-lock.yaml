@@ -245,6 +245,9 @@ importers:
       '@meshtastic/sdk':
         specifier: workspace:*
         version: link:../sdk
+      '@meshtastic/sdk-react':
+        specifier: workspace:*
+        version: link:../sdk-react
       '@meshtastic/transport-http':
         specifier: workspace:*
         version: link:../transport-http
