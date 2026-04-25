@@ -267,6 +267,9 @@ importers:
       '@meshtastic/sdk-react':
         specifier: workspace:*
         version: link:../sdk-react
+      '@meshtastic/sdk-storage-sqlocal':
+        specifier: workspace:*
+        version: link:../sdk-storage-sqlocal
       '@meshtastic/transport-http':
         specifier: workspace:*
         version: link:../transport-http
