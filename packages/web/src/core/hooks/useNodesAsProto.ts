@@ -13,12 +13,12 @@ import { useMemo } from "react";
  * every consumer reads `Node` from the SDK directly.
  */
 
-export function useNodesLegacy(): Protobuf.Mesh.NodeInfo[] {
+export function useNodesAsProto(): Protobuf.Mesh.NodeInfo[] {
   const nodes = useNodes();
   return useMemo(() => nodes.map(toNodeInfo), [nodes]);
 }
 
-export function useNodeLegacy(nodeNum: number): Protobuf.Mesh.NodeInfo | undefined {
+export function useNodeAsProto(nodeNum: number): Protobuf.Mesh.NodeInfo | undefined {
   const nodes = useNodes();
   return useMemo(() => {
     const found = nodes.find((n) => n.num === nodeNum);
@@ -31,7 +31,7 @@ export function useNodeLegacy(nodeNum: number): Protobuf.Mesh.NodeInfo | undefin
  * NodeInfo packet has been observed yet. Returns undefined while the
  * device is still configuring.
  */
-export function useMyNodeLegacy(): Protobuf.Mesh.NodeInfo | undefined {
+export function useMyNodeAsProto(): Protobuf.Mesh.NodeInfo | undefined {
   const { myNodeNum } = useMeshDevice();
   const nodes = useNodes();
   return useMemo(() => {
