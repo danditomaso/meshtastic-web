@@ -12,7 +12,8 @@ import { StoreForward } from "@components/PageComponents/ModuleConfig/StoreForwa
 import { Telemetry } from "@components/PageComponents/ModuleConfig/Telemetry.tsx";
 import { Spinner } from "@components/UI/Spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/UI/Tabs.tsx";
-import { useDevice, type ValidModuleConfigType } from "@core/stores";
+import type { ValidModuleConfigType } from "@core/stores";
+import { useConfigEditor, useSignal } from "@meshtastic/sdk-react";
 import { type ComponentType, Suspense, useMemo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -28,8 +29,15 @@ type TabItem = {
   count?: number;
 };
 
+const EMPTY_DIRTY_MODULE_SIGNAL = {
+  value: [] as readonly string[],
+  peek: () => [] as readonly string[],
+  subscribe: () => () => {},
+} as const;
+
 export const ModuleConfig = ({ onFormInit }: ConfigProps) => {
-  const { hasModuleConfigChange } = useDevice();
+  const editor = useConfigEditor();
+  const dirtyModule = useSignal(editor?.dirtyModuleSections ?? EMPTY_DIRTY_MODULE_SIGNAL);
   const { t } = useTranslation("moduleConfig");
   const tabs: TabItem[] = useMemo(
     () => [
@@ -94,8 +102,8 @@ export const ModuleConfig = ({ onFormInit }: ConfigProps) => {
   );
 
   const flags = useMemo(
-    () => new Map(tabs.map((tab) => [tab.case, hasModuleConfigChange(tab.case)])),
-    [tabs, hasModuleConfigChange],
+    () => new Map(tabs.map((tab) => [tab.case, dirtyModule.includes(tab.case)])),
+    [tabs, dirtyModule],
   );
 
   return (
