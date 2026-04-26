@@ -10,25 +10,27 @@ import { useMemo } from "react";
 
 /**
  * Adapter that surfaces SDK-managed chat history in the shape expected by
- * legacy Zustand-era components (`Message` from `messageStore/types.ts`).
- *
- * Lets MessagesPage / ChannelChat / MessageItem keep their current props
- * while reading from the OPFS-backed SQLite repository through the SDK chat
- * slice. Drafts and unread counts continue to live in Zustand.
+ * the pre-SDK message components (`Message` from `messageStore`). Lets
+ * MessagesPage / ChannelChat / MessageItem keep their current props while
+ * reading from the OPFS-backed SQLite repository through the SDK chat
+ * slice. Removed once those components consume `Message` from the SDK
+ * directly.
  */
-export interface UseChatLegacyBroadcast {
+export interface UseChatAsLegacyMessagesBroadcast {
   type: MessageType.Broadcast;
   channelId: Types.ChannelNumber;
 }
 
-export interface UseChatLegacyDirect {
+export interface UseChatAsLegacyMessagesDirect {
   type: MessageType.Direct;
   peer: number;
 }
 
-export type UseChatLegacyParams = UseChatLegacyBroadcast | UseChatLegacyDirect;
+export type UseChatAsLegacyMessagesParams =
+  | UseChatAsLegacyMessagesBroadcast
+  | UseChatAsLegacyMessagesDirect;
 
-export function useChatLegacy(params: UseChatLegacyParams): LegacyMessage[] {
+export function useChatAsLegacyMessages(params: UseChatAsLegacyMessagesParams): LegacyMessage[] {
   const broadcast = useChat(
     params.type === MessageType.Broadcast ? params.channelId : (0 as Types.ChannelNumber),
   );
@@ -38,7 +40,7 @@ export function useChatLegacy(params: UseChatLegacyParams): LegacyMessage[] {
   return useMemo(() => sdkMessages.map((m) => toLegacy(m, params)), [sdkMessages, params]);
 }
 
-function toLegacy(message: SdkMessage, params: UseChatLegacyParams): LegacyMessage {
+function toLegacy(message: SdkMessage, params: UseChatAsLegacyMessagesParams): LegacyMessage {
   return {
     type: params.type,
     channel: message.channel,
