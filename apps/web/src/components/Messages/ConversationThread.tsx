@@ -2,6 +2,7 @@ import { ConfirmDialog } from "@components/UI/ConfirmDialog.tsx";
 import { useToast } from "@core/hooks/useToast.ts";
 import { useDraft, useMessagingActions, useThread } from "@core/kmp/hooks";
 import { buildTimeline, messageKey } from "@core/messaging/messageListView.ts";
+import { shownRelayNode } from "@core/messaging/relayNode.ts";
 import { excerpt, type ThreadMessage } from "@core/messaging/thread.ts";
 import type { TracerouteView } from "@core/messaging/tracerouteView.ts";
 import type { Types } from "@core/protobuf.ts";
@@ -28,6 +29,8 @@ export interface ConversationThreadProps {
   traceroutes: readonly TracerouteView[];
   sender: (nodeNum: number) => BubbleSender;
   nameOf: (nodeNum: number) => string;
+  /** A relay byte as shown (`Name (0x5A)`), or undefined for none. */
+  relayLabel?: (relayNode: number | undefined) => string | undefined;
   myNodeNum?: number;
   lora?: LoRaSignalSettings;
   /** Muted channel: no screen reader announcements for arriving text. */
@@ -61,6 +64,7 @@ export const ConversationThread = ({
   traceroutes,
   sender,
   nameOf,
+  relayLabel,
   myNodeNum,
   lora,
   muted,
@@ -91,13 +95,16 @@ export const ConversationThread = ({
     [messages, traceroutes],
   );
   // The dialog follows the live message, so its status updates in place.
-  const detailsMessage = useMemo(
+  const details = useMemo(
     () =>
       detailsKey === undefined
         ? undefined
-        : messages.find((m) => messageKey(m.message) === detailsKey)?.message,
+        : messages.find((m) => messageKey(m.message) === detailsKey),
     [messages, detailsKey],
   );
+  const detailsRelay = details
+    ? relayLabel?.(shownRelayNode(details.message, details.outgoing))
+    : undefined;
 
   const failToast = useCallback((title: string) => toast({ title }), [toast]);
   const retry = useCallback(
@@ -256,7 +263,9 @@ export const ConversationThread = ({
         touch={touch}
       />
       <DeliveryDetailsDialog
-        message={detailsMessage}
+        message={details?.message}
+        outgoing={details?.outgoing ?? true}
+        {...(detailsRelay === undefined ? {} : { relay: detailsRelay })}
         onOpenChange={(open) => {
           if (!open) {
             setDetailsKey(undefined);

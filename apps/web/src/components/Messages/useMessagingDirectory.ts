@@ -1,4 +1,5 @@
 import { useNodeRows } from "@components/Nodes/useNodeRows.ts";
+import { relayNodeLabel } from "@core/messaging/relayNode.ts";
 import type { NodeRow } from "@core/nodes/nodeRow.ts";
 import { nodeIdSuffix } from "@core/utils/nodeIdentity.ts";
 import { useCallback, useMemo } from "react";
@@ -17,6 +18,11 @@ export interface MessagingDirectory {
   /** Long name, short name, or "Meshtastic 5A97". Stable while names don't change. */
   readonly nameOf: (nodeNum: number) => string;
   readonly sender: (nodeNum: number) => BubbleSender;
+  /**
+   * A relay byte as shown, `Name (0x5A)` or `0x5A`; undefined when none was
+   * recorded. The name is the likeliest known node ending in that byte.
+   */
+  readonly relayLabel: (relayNode: number | undefined) => string | undefined;
 }
 
 /**
@@ -78,6 +84,12 @@ export function useMessagingDirectory(): MessagingDirectory {
     [identities, t],
   );
 
+  const relayLabel = useCallback(
+    (relayNode: number | undefined) =>
+      relayNodeLabel(relayNode, sources, myNodeNum),
+    [sources, myNodeNum],
+  );
+
   // Changes with the rows (telemetry); depend on `nameOf` / `sender` where
   // stability matters.
   return useMemo(
@@ -89,7 +101,8 @@ export function useMessagingDirectory(): MessagingDirectory {
       now,
       nameOf,
       sender,
+      relayLabel,
     }),
-    [rows, byNum, channelOf, myNodeNum, now, nameOf, sender],
+    [rows, byNum, channelOf, myNodeNum, now, nameOf, sender, relayLabel],
   );
 }

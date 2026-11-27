@@ -146,6 +146,7 @@ export class SqlocalMessageRepository implements MessageRepository {
     if ("ackProof" in patch) set.ackProof = patch.ackProof ?? null;
     if ("routingError" in patch) set.routingError = patch.routingError ?? null;
     if ("relays" in patch) set.relays = patch.relays ?? null;
+    if ("relayNode" in patch) set.relayNode = patch.relayNode ?? null;
     if (Object.keys(set).length === 0) return Promise.resolve();
     return this.scope.run(async (deviceId) => {
       await this.db.update(messages).set(set).where(byRef(deviceId, ref));
@@ -498,6 +499,7 @@ function rowToMessage(row: MessageRow): Message {
     hopsAway: row.hopsAway ?? undefined,
     viaMqtt: row.viaMqtt ?? undefined,
     transport: row.transport ?? undefined,
+    relayNode: row.relayNode ?? undefined,
     ...(row.filtered ? { filtered: true } : {}),
   };
 }
@@ -528,6 +530,7 @@ function messageToRow(
     hopsAway: message.hopsAway ?? null,
     viaMqtt: message.viaMqtt ?? null,
     transport: message.transport ?? null,
+    relayNode: message.relayNode ?? null,
     filtered: message.filtered ?? false,
   };
 }

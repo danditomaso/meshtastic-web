@@ -321,6 +321,7 @@ export const ConversationScreen = ({
         traceroutes={traces}
         sender={directory.sender}
         nameOf={directory.nameOf}
+        relayLabel={directory.relayLabel}
         {...(directory.myNodeNum === undefined
           ? {}
           : { myNodeNum: directory.myNodeNum })}
